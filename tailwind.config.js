@@ -1,3 +1,4 @@
+/** @type {import('tailwindcss').Config} */
 export default {
   content: [
     "./index.html",
@@ -5,8 +6,10 @@ export default {
   ],
   theme: {
     extend: {
-      colors: { navy: "#001F4D", gold: "#D4AF37" },
-      fontFamily: { sans: ["Poppins", "Montserrat", "sans-serif"] }
+      colors: {
+        navy: '#003366',
+        gold: '#FFD700',
+      }
     },
   },
   plugins: [],
