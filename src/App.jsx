@@ -1,109 +1,102 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const LOGO_URL = "https://i.imgur.com/8QZkL9P.jpg"
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-)
+const LOGO_URL = "https://i.imgur.com/8KmNP3A.png"
 
 export default function App() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const [candidates, setCandidates] = useState([])
-  const [newName, setNewName] = useState('')
-  const [newPosition, setNewPosition] = useState('')
+  const [view, setView] = useState('login') // login, vote, admin
 
-  // YOU ARE ADMIN IF EMAIL = admin@namtls.com
-  const isAdmin = user?.email === 'admin@namtls.com'
+  useEffect(() => { loadCandidates() }, [])
 
-  useEffect(() => { fetchCandidates() }, [])
-
-  async function fetchCandidates() {
-    const { data } = await supabase.from('candidates').select('*').order('id')
+  const loadCandidates = async () => {
+    const { data } = await supabase.from('candidates').select('*')
     setCandidates(data || [])
   }
 
-  async function register() {
-    const { error } = await supabase.from('voters').insert([{ email, password_hash: password }])
-    if (!error) alert('Registered! Now login')
-    else alert(error.message)
-  }
-
-  async function login() {
-    const { data } = await supabase.from('voters').select('*').eq('email', email).eq('password_hash', password).single()
-    if (data) setUser(data)
-    else alert('Wrong login')
-  }
-
-  async function vote(candidate_id) {
-    if (user.has_voted) return alert('You already voted!')
-    await supabase.from('votes').insert([{ voter_id: user.id, candidate_id }])
-    await supabase.from('voters').update({ has_voted: true }).eq('id', user.id)
-    await supabase.from('candidates').update({ votes: candidates.find(c=>c.id===candidate_id).votes + 1 }).eq('id', candidate_id)
-    alert('Vote cast!')
-    setUser({...user, has_voted: true})
-    fetchCandidates()
-  }
-
-  async function addCandidate() {
-    if(!newName || !newPosition) return alert('Fill name and position')
-    await supabase.from('candidates').insert([{ name: newName, position: newPosition, votes: 0 }])
-    setNewName('')
-    setNewPosition('')
-    fetchCandidates()
-    alert('Candidate Added!')
-  }
-
-  async function deleteCandidate(id) {
-    if(confirm('Delete this candidate?')) {
-      await supabase.from('candidates').delete().eq('id', id)
-      fetchCandidates()
+  const handleLogin = async (email, password) => {
+    if(email === 'admin@namtls.com' && password === 'admin123'){
+      setUser({email, role: 'admin'})
+      setView('admin')
+      return
+    }
+    const { data } = await supabase.from('voters').select('*').eq('email', email)
+    if(data && data.length > 0){
+      setUser({email, role: 'voter'})
+      setView('vote')
+    } else {
+      alert('User not found. Please register first.')
     }
   }
 
-  return (
-    <div style={{minHeight: '100vh', backgroundImage: `url(${LOGO_URL})`, backgroundRepeat: 'no-repeat', backgroundPosition: 'center', backgroundSize: '400px', opacity: 0.08, padding: '20px', textAlign: 'center', fontFamily: 'Arial'}}>
-      <img src={LOGO_URL} style={{width: '220px', marginBottom: '10px'}} />
-      <h1 style={{color:'#003366'}}>NAMTLS ELECTORAL COMMISSION</h1>
-      
-      {!user? (
-        <div>
-          <h2>Login / Register</h2>
-          <input placeholder="Email" onChange={e=>setEmail(e.target.value)} style={{display:'block', margin:'10px auto', padding:'10px', width:'80%'}} />
-          <input placeholder="Password" type="password" onChange={e=>setPassword(e.target.value)} style={{display:'block', margin:'10px auto', padding:'10px', width:'80%'}} />
-          <button onClick={login} style={{margin:'5px', padding:'10px 20px', background:'#003366', color:'white'}}>Login</button>
-          <button onClick={register} style={{margin:'5px', padding:'10px 20px'}}>Register</button>
-          <p><small>Admin email: admin@namtls.com</small></p>
-        </div>
-      ) : (
-        <div>
-          <h2>Welcome {user.email}</h2>
-          {user.has_voted && <p style={{color:'green', fontWeight:'bold'}}>You have already voted ✅</p>}
-          
-          {isAdmin && (
-            <div style={{border:'2px dashed #003366', padding:'15px', margin:'20px auto', maxWidth:'400px', background:'#fff'}}>
-              <h3>Add New Candidate</h3>
-              <input placeholder="Candidate Name" value={newName} onChange={e=>setNewName(e.target.value)} style={{display:'block', margin:'10px auto', padding:'10px', width:'90%'}} />
-              <input placeholder="Position" value={newPosition} onChange={e=>setNewPosition(e.target.value)} style={{display:'block', margin:'10px auto', padding:'10px', width:'90%'}} />
-              <button onClick={addCandidate} style={{padding:'10px 20px', background:'green', color:'white'}}>Add Candidate</button>
-            </div>
-          )}
+  const handleRegister = async (email, name) => {
+    const { error } = await supabase.from('voters').insert([{email, name}])
+    if(error) alert(error.message)
+    else alert('Registered! Now login')
+  }
 
-          <h3>Candidates</h3>
-          {candidates.map(c => (
-            <div key={c.id} style={{border:'2px solid #003366', margin:'10px auto', padding:'15px', maxWidth:'350px', borderRadius:'10px', background:'#fff'}}>
-              <h3>{c.name}</h3>
-              <p><b>{c.position}</b></p>
-              <p><b>Votes: {c.votes}</b></p>
-              {!user.has_voted && !isAdmin && <button onClick={()=>vote(c.id)} style={{padding:'10px 20px', background:'#003366', color:'white'}}>Vote</button>}
-              {isAdmin && <button onClick={()=>deleteCandidate(c.id)} style={{padding:'5px 10px', background:'red', color:'white', marginTop:'5px'}}>Delete</button>}
-            </div>
-          ))}
+  const handleVote = async (candidateId) => {
+    await supabase.from('votes').insert([{candidate_id: candidateId, voter_email: user.email}])
+    await supabase.from('candidates').update({votes: candidates.find(c=>c.id===candidateId).votes + 1}).eq('id', candidateId)
+    alert('Vote submitted!')
+    loadCandidates()
+  }
+
+  if(view === 'login') return <LoginScreen onLogin={handleLogin} onRegister={handleRegister} />
+  if(view === 'admin') return <AdminPanel candidates={candidates} onLogout={() => setView('login')} />
+  if(view === 'vote') return <VotingScreen user={user} candidates={candidates} onVote={handleVote} onLogout={() => setView('login')} />
+}
+
+function LoginScreen({onLogin, onRegister}) {
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [password, setPassword] = useState('')
+  return (
+    <div style={{minHeight: '100vh', padding: '40px 20px', textAlign: 'center', background: '#f0f8ff'}}>
+      <img src={LOGO_URL} style={{width: '180px', marginBottom: '20px'}} />
+      <h1>NAMTLS Voting Portal</h1>
+      <div style={{maxWidth: '400px', margin: '0 auto'}}>
+        <input style={{width: '100%', padding: 10, margin: 5}} placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+        <input style={{width: '100%', padding: 10, margin: 5}} placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+        <button style={{width: '100%', padding: 10, margin: 5}} onClick={() => onLogin(email, password)}>Login</button>
+        <hr />
+        <input style={{width: '100%', padding: 10, margin: 5}} placeholder="Name for Register" value={name} onChange={e => setName(e.target.value)} />
+        <button style={{width: '100%', padding: 10, margin: 5}} onClick={() => onRegister(email, name)}>Register</button>
+        <p>Admin login: admin@namtls.com / admin123</p>
+      </div>
+    </div>
+  )
+}
+
+function VotingScreen({user, candidates, onVote, onLogout}) {
+  return (
+    <div style={{padding: 20}}>
+      <h2>Welcome {user.email}</h2>
+      <button onClick={onLogout}>Logout</button>
+      <h3>Cast Your Vote</h3>
+      {candidates.map(c => (
+        <div key={c.id} style={{border: '2px solid #007bff', borderRadius: 8, margin: 10, padding: 15}}>
+          <p><b>{c.name}</b> - {c.position}</p>
+          <p>Current Votes: {c.votes}</p>
+          <button onClick={() => onVote(c.id)}>Vote for {c.name}</button>
         </div>
-      )}
+      ))}
+    </div>
+  )
+}
+
+function AdminPanel({candidates, onLogout}) {
+  return (
+    <div style={{padding: 20}}>
+      <h2>Admin Dashboard</h2>
+      <button onClick={onLogout}>Logout</button>
+      <h3>Live Results</h3>
+      {candidates.map(c => <p key={c.id} style={{fontSize: 18}}>{c.name}: <b>{c.votes} votes</b></p>)}
     </div>
   )
 }
