@@ -11,7 +11,7 @@ export default function AdminLogin() {
     if(username === 'admin' && password === 'admin123') {
       navigate('/admin-dashboard');
     } else {
-      alert('Invalid Credentials');
+      alert('Invalid Credentials. Use admin / admin123');
     }
   }
 
@@ -19,8 +19,8 @@ export default function AdminLogin() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <form onSubmit={handleLogin} className="bg-white p-8 rounded-xl shadow-lg w-96">
         <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
-        <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} className="w-full p-2 border rounded mb-4" />
-        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-2 border rounded mb-4" />
+        <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} className="w-full p-2 border rounded mb-4" required />
+        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-2 border rounded mb-4" required />
         <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Login</button>
       </form>
     </div>
