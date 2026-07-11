@@ -7,9 +7,9 @@ import Landing from './pages/Landing'
 import Vote from './pages/Vote'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
-import Dashboard1 from './pages/Dashboard1' // the 1st one
-import Dashboard2 from './pages/Dashboard2' // the 2nd one 
-import Dashboard3 from './pages/Dashboard3' // the 3rd one - Results Admin
+import Dashboard1 from './pages/Dashboard1'
+import Dashboard2 from './pages/Dashboard2'
+import Dashboard3 from './pages/Dashboard3'
 import './index.css'
 import logo from './logo.png'
 
