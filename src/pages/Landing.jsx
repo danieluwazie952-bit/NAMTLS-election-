@@ -1,16 +1,14 @@
 import { Link } from 'react-router-dom';
-import logo from '../../logo.png';
 
 export default function Landing() {
   return (
-    <div className="bg-navy min-h-screen flex-col items-center justify-center text-white p-6">
-      <img src={logo} className="w-32 h-32 mb-4" alt="NAMTLS Logo"/>
-      <h1 className="text-xl font-bold text-center">NATIONAL ASSOCIATION OF MARITIME TRANSPORT AND LOGISTICS STUDENTS ELECTORAL COMMISSION</h1>
-      <p className="mt-2 text-gold">Official Voting Portal</p>
-      <div className="mt-8">
-        <Link to="/vote" className="bg-gold text-navy px-8 py-4 rounded font-bold text-lg">Student Login/Register</Link>
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex flex-col items-center justify-center text-white">
+      <h1 className="text-5xl font-bold mb-4">NUTAS Result Checker</h1>
+      <p className="mb-8">Check your results and manage student data</p>
+      <div className="space-x-4">
+        <Link to="/student-dashboard" className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold">Student Portal</Link>
+        <Link to="/admin-login" className="bg-yellow-400 text-black px-6 py-3 rounded-lg font-semibold">Admin Login</Link>
       </div>
-      <p className="text-xs mt-10 opacity-50">Admin? <Link to="/admin-login" className="underline">Click here</Link></p>
     </div>
-  )
+  );
 }
