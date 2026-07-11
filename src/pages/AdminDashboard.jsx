@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
 export default function AdminDashboard() {
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('settings');
   const [candidates, setCandidates] = useState([]);
   const [settings, setSettings] = useState({ year: '', date: '', time: '', isActive: false });
@@ -11,6 +12,7 @@ export default function AdminDashboard() {
   const [photo, setPhoto] = useState('');
 
   useEffect(() => {
+    setTimeout(() => setLoading(false), 1500);
     const savedCandidates = JSON.parse(localStorage.getItem('candidates')) || [];
     const savedSettings = JSON.parse(localStorage.getItem('electionSettings')) || {};
     setCandidates(savedCandidates);
@@ -44,6 +46,15 @@ export default function AdminDashboard() {
 
   const printResults = () => { window.print(); }
   const totalVotes = candidates.reduce((sum, c) => sum + c.votes, 0);
+
+  if(loading) {
+    return (
+      <div className="min-h-screen bg-blue-900 flex flex-col items-center justify-center">
+        <img src="/logo.png" alt="Logo" className="w-32 h-32 mb-4 animate-pulse" />
+        <p className="text-white text-xl font-semibold">Loading Admin Panel...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
