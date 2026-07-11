@@ -4,7 +4,6 @@ import { initializeApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import Landing from './pages/Landing'
-import Vote from './pages/vote'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import Dashboard1 from './pages/Dashboard1'
@@ -43,7 +42,6 @@ function App() {
         <Watermark />
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/vote" element={<Vote />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
           <Route path="/dashboard1" element={<RequireAdmin><Dashboard1 /></RequireAdmin>} /> 
