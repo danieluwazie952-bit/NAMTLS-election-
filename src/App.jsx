@@ -3,7 +3,6 @@ import AdminLogin from './pages/AdminLogin';
 import Landing from './pages/Landing';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentDashboard from './pages/StudentDashboard';
-import ResultDashboard from './pages/ResultDashboard';
 import './index.css';
 
 function App() {
@@ -14,7 +13,6 @@ function App() {
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
-        <Route path="/result-dashboard" element={<ResultDashboard />} />
       </Routes>
     </Router>
   );
