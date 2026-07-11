@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 
 export default function StudentDashboard() {
+  const [loading, setLoading] = useState(true);
   const [candidates, setCandidates] = useState([]);
   const [settings, setSettings] = useState({});
   const [hasVoted, setHasVoted] = useState(false);
 
   useEffect(() => {
+    setTimeout(() => setLoading(false), 1500);
     const saved = JSON.parse(localStorage.getItem('candidates')) || [];
     const savedSettings = JSON.parse(localStorage.getItem('electionSettings')) || {};
     setCandidates(saved);
@@ -26,9 +28,18 @@ export default function StudentDashboard() {
     alert('Vote Submitted Successfully');
   }
 
+  if(loading) {
+    return (
+      <div className="min-h-screen bg-green-800 flex-col items-center justify-center">
+        <img src="/logo.png" alt="Logo" className="w-32 h-32 mb-4 animate-pulse" />
+        <p className="text-white text-xl font-semibold">Loading Voting Portal...</p>
+      </div>
+    )
+  }
+
   if (!isElectionReady) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex items-center justify-center text-white px-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex flex-col items-center justify-center text-white px-4">
         <h1 className="text-5xl font-bold text-center">ELECTION COMING SOON</h1>
       </div>
     );
@@ -36,32 +47,40 @@ export default function StudentDashboard() {
 
   if (!isElectionTime) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex items-center justify-center text-white px-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex-col items-center justify-center text-white px-4">
         <h1 className="text-5xl font-bold text-center">ELECTION COMING SOON</h1>
       </div>
     );
   }
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-2 text-center">Student Voting Portal</h1>
-      <p className="text-center mb-6">Election Year: {settings.year}</p>
-      {hasVoted? <p className="text-green-600 text-center text-xl">You have already voted. Thank you.</p> :
-      <div className="grid gap-6 max-w-4xl mx-auto">
-        {candidates.map(candidate => (
-          <div key={candidate.id} className="bg-white p-6 rounded-lg shadow">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <img src={candidate.photo} alt={candidate.name} className="w-32 h-32 object-cover rounded-full border-4 border-green-600" />
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold">{candidate.name}</h2>
-                <p className="text-lg text-blue-700 font-semibold">Position: {candidate.position}</p>
-                <p className="mt-3"><b>Manifesto:</b> {candidate.manifesto || 'No manifesto provided'}</p>
+    <div className="p-8 bg-gray-50 min-h-screen relative">
+      {/* WATERMARK LOGO */}
+      <img src="/logo.png" alt="Watermark" className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] opacity-5 pointer-events-none" />
+
+      <div className="relative z-10">
+        <h1 className="text-3xl font-bold mb-2 text-center">Student Voting Portal</h1>
+        <p className="text-center mb-6">Election Year: {settings.year}</p>
+        {hasVoted? (
+          <p className="text-green-600 text-center text-xl">You have already voted. Thank you.</p>
+        ) : (
+          <div className="grid gap-6 max-w-4xl mx-auto">
+            {candidates.map(candidate => (
+              <div key={candidate.id} className="bg-white p-6 rounded-lg shadow">
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  <img src={candidate.photo} alt={candidate.name} className="w-32 h-32 object-cover rounded-full border-4 border-green-600" />
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold">{candidate.name}</h2>
+                    <p className="text-lg text-blue-700 font-semibold">Position: {candidate.position}</p>
+                    <p className="mt-3"><b>Manifesto:</b> {candidate.manifesto || 'No manifesto provided'}</p>
+                  </div>
+                  <button onClick={() => handleVote(candidate.id)} className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-bold">Vote</button>
+                </div>
               </div>
-              <button onClick={() => handleVote(candidate.id)} className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-bold">Vote</button>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>}
+        )}
+      </div>
     </div>
   );
 }
