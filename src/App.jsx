@@ -1,9 +1,14 @@
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import Landing from './pages/Landing';
+import './index.css';
+
 function App() {
   return (
-    <div style={{textAlign: 'center', padding: '50px'}}>
-      <h1>NAMTLS Election is Working! ✅</h1>
-      <p>If you see this, React is fine</p>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+      </Routes>
+    </Router>
   );
 }
 export default App;
