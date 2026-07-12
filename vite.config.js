@@ -3,9 +3,5 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   base: '/',
-  plugins: [
-    react({
-      jsxRuntime: 'automatic', // <- changed
-    }),
-  ],
+  plugins: [react()],
 })
