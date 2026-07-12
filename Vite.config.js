@@ -6,7 +6,3 @@ export default defineConfig({
   base: '/',
   build: { outDir: 'dist' }
 })
-    export default {
-      base: './',  <-- ADD THIS LINE
-      // ...rest of your code
-    }
