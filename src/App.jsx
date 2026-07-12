@@ -1,8 +1,3 @@
-function App() {
-  return (
-    <div style={{textAlign: 'center', padding: '50px'}}>
-      <h1>NAMTLS Election is Working! ✅</h1>
-    </div>
-  );
+export default function App() {
+  return <h1 style={{color: 'red', textAlign: 'center', marginTop: '100px'}}>NAMTLS IS LIVE</h1>
 }
-export default App;
