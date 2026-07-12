@@ -1,12 +1,12 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
+import { createElement, Component, StrictMode } from 'react'
 import { HashRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
 
 console.log('APP_START: NAMTLS Election initializing...');
 
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -19,27 +19,43 @@ class ErrorBoundary extends React.Component {
   }
   render() {
     if (this.state.hasError) {
-      return (
-        <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'#1e3a5f',color:'white',fontFamily:'Arial,sans-serif',padding:'20px',textAlign:'center'}}>
-          <h1 style={{fontSize:'28px',marginBottom:'16px'}}>NAMTLS Election</h1>
-          <p style={{fontSize:'18px',marginBottom:'8px'}}>App loaded but an error occurred</p>
-          <p style={{color:'#fbbf24',fontSize:'14px',maxWidth:'500px'}}>{this.state.error?.message || 'Unknown error'}</p>
-          <p style={{marginTop:'20px',fontSize:'12px',color:'#94a3b8'}}>Please check the browser console (F12) for details</p>
-        </div>
+      return createElement('div', {
+        style: {
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#1e3a5f',
+          color: 'white',
+          fontFamily: 'Arial, sans-serif',
+          padding: '20px',
+          textAlign: 'center'
+        }
+      },
+        createElement('h1', { style: { fontSize: '28px', marginBottom: '16px' } }, 'NAMTLS Election'),
+        createElement('p', { style: { fontSize: '18px', marginBottom: '8px' } }, 'App loaded but an error occurred'),
+        createElement('p', { style: { color: '#fbbf24', fontSize: '14px', maxWidth: '500px' } },
+          this.state.error?.message || 'Unknown error'
+        ),
+        createElement('p', { style: { marginTop: '20px', fontSize: '12px', color: '#94a3b8' } },
+          'Please check the browser console (F12) for details'
+        )
       );
     }
     return this.props.children;
   }
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <HashRouter>
-        <App />
-      </HashRouter>
-    </ErrorBoundary>
-  </React.StrictMode>
+const root = createRoot(document.getElementById('root'));
+root.render(
+  createElement(StrictMode, null,
+    createElement(ErrorBoundary, null,
+      createElement(HashRouter, null,
+        createElement(App, null)
+      )
+    )
+  )
 );
 
 console.log('RENDER_OK: App mounted successfully');
