@@ -17,7 +17,7 @@ function App() {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/student-login" element={<StudentLogin />} /> {/* <-- ADDED THIS LINE */}
-        <Route path="/student/dashboard" element={<StudentDashboard />} />
+        <Route path="/student-dashboard" element={<StudentDashboard />} />
       </Routes>
     </>
   );
