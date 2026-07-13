@@ -15,7 +15,7 @@ export default function StudentDashboard() {
     const savedStudent = JSON.parse(localStorage.getItem('studentInfo'));
 
     if(!savedStudent) {
-      navigate('/student-login'); // If not logged in, send back
+      navigate('/student-login');
       return;
     }
 
@@ -23,7 +23,7 @@ export default function StudentDashboard() {
     setCandidates(saved);
     setSettings(savedSettings);
     setHasVoted(localStorage.getItem('voted') === 'true');
-    setLoading(false); // Stop loading only after we check everything
+    setLoading(false);
   }, [navigate]);
 
   const handleLogout = () => {
@@ -31,10 +31,9 @@ export default function StudentDashboard() {
     navigate('/student-login');
   };
 
-  // FIX 1: Add default values so it doesn't crash
   const isElectionReady = settings.isActive && candidates.length > 0 && settings.date && settings.time;
-  const electionDateTime = settings.date && settings.time? new Date(`${settings.date}T${settings.time}`) : new Date(0);
-  const isElectionTime = new Date() >= electionDateTime;
+  const electionDateTime = settings.date && settings.time? new Date(`${settings.date}T${settings.time}`) : null;
+  const isElectionTime = electionDateTime? new Date() >= electionDateTime : false;
 
   const handleVote = (id) => {
     const updated = candidates.map(c => c.id === id? {...c, votes: (c.votes || 0) + 1} : c);
@@ -54,31 +53,26 @@ export default function StudentDashboard() {
     )
   }
 
-  // FIX 2: Don't show student?.name if student is still null
   if (!student) return null;
 
-  if (!isElectionReady) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex flex-col items-center justify-center text-white px-4">
-        <button onClick={handleLogout} className="absolute top-4 right-4 bg-red-600 px-4 py-2 rounded">Logout</button>
-        <h1 className="text-5xl font-bold text-center">ELECTION NOT SETUP</h1>
-        <p className="mt-4 text-lg">Welcome, {student.name}</p>
-        <p className="mt-2 text-sm text-gray-300">Admin needs to add candidates and set election date/time</p>
-      </div>
-    );
-  }
-
-  if (!isElectionTime) {
+  // THIS IS THE KEY: If admin has NOT activated, it stays on "COMING SOON"
+  if (!isElectionReady ||!isElectionTime) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex-col items-center justify-center text-white px-4">
         <button onClick={handleLogout} className="absolute top-4 right-4 bg-red-600 px-4 py-2 rounded">Logout</button>
         <h1 className="text-5xl font-bold text-center">ELECTION COMING SOON</h1>
-        <p className="mt-4 text-lg">Election starts: {settings.date} at {settings.time}</p>
+
+        {isElectionReady && settings.date && settings.time && (
+          <p className="mt-4 text-lg">Election starts: {settings.date} at {settings.time}</p>
+        )}
+
         <p className="mt-2">Welcome, {student.name}</p>
+        <p className="mt-2 text-sm text-gray-400">Check back later to vote</p>
       </div>
     );
   }
 
+  // ONLY SHOW VOTING WHEN ADMIN ACTIVATES AND TIME HAS REACHED
   return (
     <div className="p-8 bg-gray-50 min-h-screen relative">
       <img src="/logo.png" alt="Watermark" className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] opacity-5 pointer-events-none" />
