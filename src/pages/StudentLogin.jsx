@@ -12,6 +12,10 @@ export default function StudentLogin() {
       alert('Please fill all fields');
       return;
     }
+    // PATCH 3 - CMOS MATRIC RULE FOR SIGNUP
+    if(!form.matric.toUpperCase().startsWith('CMOS')){
+      return alert('ERROR: Only CMOS matric numbers allowed');
+    }
     try {
       const students = JSON.parse(localStorage.getItem('students')) || [];
       if (students.find(s => s.matric === form.matric)) {
@@ -33,6 +37,10 @@ export default function StudentLogin() {
     if (!loginForm.matric) {
       alert('Please fill Matric Number');
       return;
+    }
+    // PATCH 3 - CMOS MATRIC RULE FOR LOGIN
+    if(!loginForm.matric.toUpperCase().startsWith('CMOS')){
+      return alert('ERROR: Only CMOS matric numbers allowed');
     }
     try {
       const students = JSON.parse(localStorage.getItem('students')) || [];
@@ -57,20 +65,19 @@ export default function StudentLogin() {
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#003366', marginBottom: '8px' }}>
+        <h1 style={{ textAlign: 'center', color: '#003366', marginBottom: '4px' }}>
           {authMode === 'signup' ? 'Student Registration' : 'Student Login'}
         </h1>
-        <p style={{ color: '#666', marginBottom: '24px' }}>
+        <p style={{ textAlign: 'center', color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
           {authMode === 'signup' ? 'Create account to continue' : 'Login with your Matric Number'}
         </p>
-
         {authMode === 'signup' ? (
           <div>
             <input type="text" placeholder="Full Name" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} style={inputStyle} />
             <input type="text" placeholder="Matric Number" value={form.matric} onChange={(e) => setForm({...form, matric: e.target.value})} style={inputStyle} />
-            <input type="text" placeholder="Level (e.g. 200)" value={form.level} onChange={(e) => setForm({...form, level: e.target.value})} style={inputStyle} />
+            <input type="text" placeholder="Level (e.g. ND1, HND2)" value={form.level} onChange={(e) => setForm({...form, level: e.target.value})} style={inputStyle} />
             <button onClick={handleSignup} style={btnStyle}>Register</button>
-            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px' }}>
+            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#6b7280' }}>
               Already have an account?{' '}
               <button onClick={() => setAuthMode('login')} style={linkStyle}>Login</button>
             </p>
@@ -79,7 +86,7 @@ export default function StudentLogin() {
           <div>
             <input type="text" placeholder="Matric Number" value={loginForm.matric} onChange={(e) => setLoginForm({...loginForm, matric: e.target.value})} style={{...inputStyle, marginBottom: '16px'}} />
             <button onClick={handleLogin} style={btnStyle}>Login</button>
-            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px' }}>
+            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#6b7280' }}>
               Don't have an account?{' '}
               <button onClick={() => setAuthMode('signup')} style={linkStyle}>Register</button>
             </p>
