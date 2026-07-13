@@ -13,7 +13,8 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
     "jspdf": "^2.5.1",
-    "jspdf-autotable": "^3.8.2"
+    "jspdf-autotable": "^3.8.2",
+    "firebase": "^10.12.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
