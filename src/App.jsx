@@ -11,13 +11,13 @@ function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/student-login" element={<StudentLogin />} />
       <Route path="/student" element={<StudentDashboard />} />
-      <Route path="/student-dashboard" element={<Navigate to="/student" replace />} />
       <Route path="/admin" element={<AdminLogin />} />
       <Route path="/admin-dashboard" element={<AdminDashboard />} />
       <Route path="*" element={
-        <div style={{minHeight:'100vh',background:'#003366',color:'white',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px',fontFamily:'Arial,sans-serif',textAlign:'center'}}>
-          <h1 style={{fontSize:'28px',marginBottom:'16px'}}>ERROR 404: Route Not Found</h1>
-          <p style={{color:'#fbbf24',fontSize:'14px'}}>The page you requested does not exist.</p>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#003366', color: 'white', fontFamily: 'Arial, sans-serif', textAlign: 'center', padding: '32px' }}>
+          <h1>ERROR 404: Route Not Found</h1>
+          <p>The page you requested does not exist.</p>
+          <a href="/" style={{ color: '#ffd700', marginTop: '16px' }}>Go Home</a>
         </div>
       } />
     </Routes>
