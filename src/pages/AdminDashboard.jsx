@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import { db, storage } from '../firebase';
+import { collection, addDoc, getDocs, updateDoc, doc, setDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -9,39 +12,73 @@ export default function AdminDashboard() {
   const [position, setPosition] = useState('');
   const [dept, setDept] = useState('');
   const [manifesto, setManifesto] = useState('');
-  const [photo, setPhoto] = useState('');
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState('');
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 1500);
-    const savedCandidates = JSON.parse(localStorage.getItem('candidates')) || [];
-    const savedSettings = JSON.parse(localStorage.getItem('electionSettings')) || {};
-    setCandidates(savedCandidates);
-    setSettings(savedSettings);
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    // Load candidates from Firebase
+    const candSnap = await getDocs(collection(db, "candidates"));
+    setCandidates(candSnap.docs.map(d => ({ id: d.id,...d.data() })));
+
+    // Load settings from Firebase
+    const settingsSnap = await getDocs(collection(db, "settings"));
+    if(settingsSnap.docs.length > 0) {
+      setSettings(settingsSnap.docs[0].data());
+    }
+    setLoading(false);
+  }
 
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
+    setPhoto(file);
     const reader = new FileReader();
-    reader.onloadend = () => { setPhoto(reader.result); };
+    reader.onloadend = () => { setPhotoPreview(reader.result); };
     reader.readAsDataURL(file);
   }
 
-  const saveSettings = () => {
-    if(!settings.year ||!settings.date ||!settings.time) { alert('Please fill Year, Date and Time'); return; }
+  const saveSettings = async () => {
+    if(!settings.year ||!settings.date ||!settings.time) { 
+      alert('Please fill Year, Date and Time'); 
+      return; 
+    }
     const newSettings = {...settings, isActive: true };
+    await setDoc(doc(db, "settings", "main"), newSettings); // Saves to Firebase
     setSettings(newSettings);
-    localStorage.setItem('electionSettings', JSON.stringify(newSettings));
-    alert('Election Settings Saved. Student Portal is now LIVE');
+    alert('Election Settings Saved to Firebase. Student Portal is now LIVE');
   }
 
-  const addCandidate = () => {
-    if(name && position) {
-      const newCandidates = [...candidates, { id: Date.now(), name, position, dept, manifesto, photo, votes: 0 }];
-      setCandidates(newCandidates);
-      localStorage.setItem('candidates', JSON.stringify(newCandidates));
-      setName(''); setPosition(''); setDept(''); setManifesto(''); setPhoto('');
-      alert('Candidate Added Successfully');
+  const addCandidate = async () => {
+    if(!name ||!position) {
+      alert('Please fill Name and Position');
+      return;
     }
+
+    let photoURL = '';
+    if(photo) {
+      // Upload photo to Firebase Storage
+      const storageRef = ref(storage, `candidates/${Date.now()}_${photo.name}`);
+      const snap = await uploadBytes(storageRef, photo);
+      photoURL = await getDownloadURL(snap.ref);
+    }
+
+    // Add candidate to Firebase
+    await addDoc(collection(db, "candidates"), { 
+      name, 
+      position, 
+      dept, 
+      manifesto, 
+      photoURL, 
+      votes: 0 
+    });
+
+    setName(''); setPosition(''); setDept(''); setManifesto(''); setPhoto(''); setPhotoPreview('');
+    loadData();
+    alert('Candidate Added Successfully to Firebase');
   }
 
   const printResults = () => { window.print(); }
@@ -90,7 +127,7 @@ export default function AdminDashboard() {
             <input type="text" placeholder="Department - Admin Only" value={dept} onChange={e => setDept(e.target.value)} className="w-full p-2 border rounded mb-3" />
             <textarea placeholder="Manifesto" value={manifesto} onChange={e => setManifesto(e.target.value)} className="w-full p-2 border rounded mb-3 h-24"></textarea>
             <input type="file" accept="image/*" onChange={handlePhotoUpload} className="w-full p-2 border rounded mb-3" />
-            {photo && <img src={photo} className="w-24 h-24 object-cover rounded mb-3" />}
+            {photoPreview && <img src={photoPreview} className="w-24 h-24 object-cover rounded mb-3" />}
             <button onClick={addCandidate} className="bg-green-600 text-white px-4 py-2 rounded">Add Candidate</button>
           </div>
         </div>
@@ -103,10 +140,16 @@ export default function AdminDashboard() {
             <button onClick={printResults} className="bg-red-600 text-white px-4 py-2 rounded">Print Results</button>
           </div>
           <table className="w-full border">
-            <thead><tr className="bg-gray-100"><th className="p-3 border text-left">S/N</th><th className="p-3 border text-left">Candidate</th><th className="p-3 border text-left">Position</th><th className="p-3 border text-left">Votes</th></tr></thead>
+            <thead><tr className="bg-gray-100"><th className="p-3 border text-left">S/N</th><th className="p-3 border text-left">Photo</th><th className="p-3 border text-left">Candidate</th><th className="p-3 border text-left">Position</th><th className="p-3 border text-left">Votes</th></tr></thead>
             <tbody>
               {candidates.sort((a,b) => b.votes - a.votes).map((c, index) => (
-                <tr key={c.id}><td className="p-3 border">{index + 1}</td><td className="p-3 border flex items-center gap-2"><img src={c.photo} className="w-10 h-10 rounded-full"/>{c.name}</td><td className="p-3 border">{c.position}</td><td className="p-3 border font-bold">{c.votes}</td></tr>
+                <tr key={c.id}>
+                  <td className="p-3 border">{index + 1}</td>
+                  <td className="p-3 border"><img src={c.photoURL} className="w-10 h-10 rounded-full object-cover"/></td>
+                  <td className="p-3 border">{c.name}</td>
+                  <td className="p-3 border">{c.position}</td>
+                  <td className="p-3 border font-bold">{c.votes}</td>
+                </tr>
               ))}
             </tbody>
           </table>
