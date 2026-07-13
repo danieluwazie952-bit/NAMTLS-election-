@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db, storage } from '../firebase';
-import { collection, addDoc, getDocs, updateDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export default function AdminDashboard() {
@@ -66,94 +66,142 @@ export default function AdminDashboard() {
       photoURL = await getDownloadURL(snap.ref);
     }
     await addDoc(collection(db, "candidates"), {
-      name,
-      position,
-      dept,
-      manifesto,
-      photoURL,
-      votes: 0
+      name, position, dept, manifesto, photoURL, votes: 0
     });
-    setName(''); setPosition(''); setDept(''); setManifesto('');
-    setPhoto(null); setPhotoPreview('');
+    setName('');
+    setPosition('');
+    setDept('');
+    setManifesto('');
+    setPhoto(null);
+    setPhotoPreview('');
     loadData();
     alert('Candidate Added Successfully to Firebase');
   };
 
   const printResults = () => { window.print(); };
-  const totalVotes = candidates.reduce((sum, c) => sum + c.votes, 0);
+  const totalVotes = candidates.reduce((sum, c) => sum + (c.votes || 0), 0);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-        <img src="/logo.png" alt="Logo" className="w-20 h-20 mb-4" onError={(e) => { e.target.style.display = 'none'; }} />
-        <p className="text-lg">Loading Admin Panel...</p>
+      <div style={{ minHeight: '100vh', background: '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontSize: '18px' }}>Loading Admin Panel...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-navy mb-6">Admin Dashboard</h1>
-        <div className="flex gap-2 mb-6">
-          <button onClick={() => setTab('settings')} className={`px-4 py-2 rounded font-semibold ${tab === 'settings' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>Election Settings</button>
-          <button onClick={() => setTab('candidates')} className={`px-4 py-2 rounded font-semibold ${tab === 'candidates' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>Manage Candidates</button>
-          <button onClick={() => setTab('results')} className={`px-4 py-2 rounded font-semibold ${tab === 'results' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>View Results</button>
+    <div style={{ minHeight: '100vh', background: '#f3f4f6', padding: '24px' }}>
+      <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+        <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#003366', marginBottom: '24px' }}>Admin Dashboard</h1>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+          {['settings', 'candidates', 'results'].map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '4px',
+                fontWeight: '600',
+                background: tab === t ? '#2563eb' : '#e5e7eb',
+                color: tab === t ? 'white' : '#374151',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {t === 'settings' ? 'Election Settings' : t === 'candidates' ? 'Manage Candidates' : 'View Results'}
+            </button>
+          ))}
         </div>
 
         {tab === 'settings' && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Set Election Details</h2>
-            <input type="number" placeholder="Election Year" value={settings.year} onChange={(e) => setSettings({ ...settings, year: e.target.value })} className="w-full p-2 border rounded mb-3" />
-            <input type="date" value={settings.date} onChange={(e) => setSettings({ ...settings, date: e.target.value })} className="w-full p-2 border rounded mb-3" />
-            <input type="time" value={settings.time} onChange={(e) => setSettings({ ...settings, time: e.target.value })} className="w-full p-2 border rounded mb-3" />
-            <button onClick={saveSettings} className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Activate Election</button>
-            <p className="mt-2">Status: <span className={settings.isActive ? 'text-green-600 font-bold' : 'text-yellow-600'}>{settings.isActive ? 'LIVE' : 'COMING SOON'}</span></p>
+          <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px' }}>Set Election Details</h2>
+            <input type="number" placeholder="Election Year" value={settings.year}
+              onChange={(e) => setSettings({ ...settings, year: e.target.value })}
+              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px' }} />
+            <input type="date" value={settings.date}
+              onChange={(e) => setSettings({ ...settings, date: e.target.value })}
+              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px' }} />
+            <input type="time" value={settings.time}
+              onChange={(e) => setSettings({ ...settings, time: e.target.value })}
+              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px' }} />
+            <button onClick={saveSettings}
+              style={{ background: '#16a34a', color: 'white', padding: '8px 24px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              Activate Election
+            </button>
+            <p style={{ marginTop: '8px' }}>
+              Status:{' '}
+              <span style={{ color: settings.isActive ? '#16a34a' : '#ca8a04', fontWeight: 'bold' }}>
+                {settings.isActive ? 'LIVE' : 'COMING SOON'}
+              </span>
+            </p>
           </div>
         )}
 
         {tab === 'candidates' && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="mb-4">
+          <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <div style={{ marginBottom: '16px' }}>
               <p>Total Candidates: {candidates.length}</p>
               <p>Total Votes Cast: {totalVotes}</p>
               <p>Year: {settings.year || 'Not Set'}</p>
             </div>
-            <h2 className="text-xl font-semibold mb-4">Add/Edit Candidate</h2>
-            <input type="text" placeholder="Candidate Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full p-2 border rounded mb-3" />
-            <input type="text" placeholder="Position" value={position} onChange={(e) => setPosition(e.target.value)} className="w-full p-2 border rounded mb-3" />
-            <input type="text" placeholder="Department" value={dept} onChange={(e) => setDept(e.target.value)} className="w-full p-2 border rounded mb-3" />
-            <textarea placeholder="Manifesto" value={manifesto} onChange={(e) => setManifesto(e.target.value)} className="w-full p-2 border rounded mb-3" rows="3" />
-            <input type="file" accept="image/*" onChange={handlePhotoUpload} className="mb-3" />
-            {photoPreview && <img src={photoPreview} alt="Preview" className="w-20 h-20 object-cover rounded mb-3" />}
-            <button onClick={addCandidate} className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Add Candidate</button>
+            <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px' }}>Add/Edit Candidate</h2>
+            <input type="text" placeholder="Candidate Name" value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px' }} />
+            <input type="text" placeholder="Position" value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px' }} />
+            <input type="text" placeholder="Department" value={dept}
+              onChange={(e) => setDept(e.target.value)}
+              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px' }} />
+            <textarea placeholder="Manifesto" value={manifesto}
+              onChange={(e) => setManifesto(e.target.value)} rows="3"
+              style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px' }} />
+            <input type="file" accept="image/*" onChange={handlePhotoUpload}
+              style={{ marginBottom: '12px', display: 'block' }} />
+            {photoPreview && (
+              <img src={photoPreview} alt="Preview"
+                style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', marginBottom: '12px' }} />
+            )}
+            <button onClick={addCandidate}
+              style={{ background: '#2563eb', color: 'white', padding: '8px 24px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              Add Candidate
+            </button>
           </div>
         )}
 
         {tab === 'results' && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Live Election Results - {settings.year}</h2>
-            <button onClick={printResults} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 mb-4">Print Results</button>
-            <table className="w-full border-collapse border">
+          <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px' }}>Live Election Results - {settings.year}</h2>
+            <button onClick={printResults}
+              style={{ background: '#4b5563', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '4px', cursor: 'pointer', marginBottom: '16px' }}>
+              Print Results
+            </button>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="bg-gray-200">
-                  <th className="border p-2">S/N</th>
-                  <th className="border p-2">Photo</th>
-                  <th className="border p-2">Candidate</th>
-                  <th className="border p-2">Position</th>
-                  <th className="border p-2">Votes</th>
+                <tr style={{ background: '#e5e7eb' }}>
+                  <th style={{ border: '1px solid #ccc', padding: '8px' }}>S/N</th>
+                  <th style={{ border: '1px solid #ccc', padding: '8px' }}>Photo</th>
+                  <th style={{ border: '1px solid #ccc', padding: '8px' }}>Candidate</th>
+                  <th style={{ border: '1px solid #ccc', padding: '8px' }}>Position</th>
+                  <th style={{ border: '1px solid #ccc', padding: '8px' }}>Votes</th>
                 </tr>
               </thead>
               <tbody>
-                {candidates.sort((a, b) => b.votes - a.votes).map((c, index) => (
-                  <tr key={c.id} className="text-center">
-                    <td className="border p-2">{index + 1}</td>
-                    <td className="border p-2">
-                      {c.photoURL && <img src={c.photoURL} alt={c.name} className="w-10 h-10 object-cover rounded-full mx-auto" onError={(e) => { e.target.style.display = 'none'; }} />}
+                {candidates.sort((a, b) => (b.votes || 0) - (a.votes || 0)).map((c, index) => (
+                  <tr key={c.id} style={{ textAlign: 'center' }}>
+                    <td style={{ border: '1px solid #ccc', padding: '8px' }}>{index + 1}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '8px' }}>
+                      {c.photoURL ? (
+                        <img src={c.photoURL} alt={c.name}
+                          style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%', margin: '0 auto' }}
+                          onError={(e) => { e.target.style.display = 'none'; }} />
+                      ) : 'N/A'}
                     </td>
-                    <td className="border p-2">{c.name}</td>
-                    <td className="border p-2">{c.position}</td>
-                    <td className="border p-2 font-bold">{c.votes}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '8px' }}>{c.name}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '8px' }}>{c.position}</td>
+                    <td style={{ border: '1px solid #ccc', padding: '8px', fontWeight: 'bold' }}>{c.votes || 0}</td>
                   </tr>
                 ))}
               </tbody>
