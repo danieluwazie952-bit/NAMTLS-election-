@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Watermark from '../components/Watermark';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -53,21 +52,29 @@ export default function StudentDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-navy flex flex-col items-center justify-center text-white">
-        <Watermark />
+        <h1 className="text-2xl">NAMTLS Election</h1>
         <p className="mt-4 text-lg">Loading Voting Portal...</p>
       </div>
     );
   }
 
   if (!student) {
-    return <div className="min-h-screen bg-navy flex items-center justify-center text-white">Redirecting...</div>;
+    return (
+      <div className="min-h-screen bg-navy flex items-center justify-center text-white">
+        <p>Please Login First</p>
+      </div>
+    );
   }
 
   if (!isElectionReady || !isElectionTime) {
     return (
       <div className="min-h-screen bg-navy flex flex-col items-center justify-center text-white p-8">
-        <Watermark />
-        <button onClick={handleLogout} className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Logout</button>
+        <button
+          onClick={handleLogout}
+          className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+        >
+          Logout
+        </button>
         <h1 className="text-4xl font-bold text-gold mb-4">ELECTION COMING SOON</h1>
         {isElectionReady && settings.date && settings.time && (
           <p className="text-lg mb-2">Election starts: {settings.date} at {settings.time}</p>
@@ -79,8 +86,12 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-navy text-white p-8">
-      <Watermark />
-      <button onClick={handleLogout} className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Logout</button>
+      <button
+        onClick={handleLogout}
+        className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+      >
+        Logout
+      </button>
 
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gold mb-6">Student Voting Portal</h1>
@@ -89,6 +100,8 @@ export default function StudentDashboard() {
 
         {hasVoted ? (
           <p className="text-green-400 text-xl font-bold">You have already voted. Thank you.</p>
+        ) : candidates.length === 0 ? (
+          <p className="text-yellow-400 text-xl font-bold">No Candidates Yet</p>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
             {candidates.map(candidate => (
@@ -103,7 +116,9 @@ export default function StudentDashboard() {
                 )}
                 <h2 className="text-xl font-bold text-center">{candidate.name}</h2>
                 <p className="text-center text-gray-600">Position: {candidate.position}</p>
-                <p className="mt-2 text-sm"><strong>Manifesto:</strong> {candidate.manifesto || 'No manifesto provided'}</p>
+                <p className="mt-2 text-sm">
+                  <strong>Manifesto:</strong> {candidate.manifesto || 'No manifesto provided'}
+                </p>
                 <button
                   onClick={() => handleVote(candidate.id)}
                   className="mt-4 w-full bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-bold"
