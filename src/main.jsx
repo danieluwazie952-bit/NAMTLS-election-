@@ -1,80 +1,40 @@
-console.log("=== NAMTLS DEBUG START ===")
-console.log("VITE_ENV:", import.meta.env.MODE)
-console.log("REACT CHECK:", typeof React)
-console.log("CREATEELEMENT CHECK:", typeof createElement)
+import { createRoot } from 'react-dom/client';
+import { StrictMode } from 'react';
+import { HashRouter } from 'react-router-dom';
+import App from './App';
+import './index.css';
 
+// Display runtime errors directly on screen
 window.addEventListener('error', (e) => {
-  console.error("=== GLOBAL ERROR CAUGHT ===")
-  console.error("Message:", e.message)
-  console.error("File:", e.filename)
-  console.error("Line:", e.lineno, "Col:", e.colno)
-  console.error("Stack:", e.error?.stack)
-})
+  const errorBox = document.createElement('div');
+  errorBox.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:white;padding:20px;font-family:monospace;z-index:99999;font-size:14px;';
+  errorBox.innerHTML = '<h2 style="margin:0 0 8px 0;font-size:18px;">⚠️ RUNTIME ERROR</h2><p style="margin:0 0 4px 0;">' + e.message + '</p><p style="margin:0;font-size:12px;opacity:0.8;">' + (e.filename || '') + ':' + (e.lineno || '') + '</p>';
+  document.body.prepend(errorBox);
+  e.preventDefault();
+});
 
-if(typeof React === 'undefined') {
-  console.error("FATAL: React is not defined. This will crash JSX")
+const rootElement = document.getElementById('root');
+
+try {
+  const root = createRoot(rootElement);
+  root.render(
+    <StrictMode>
+      <HashRouter>
+        <App />
+      </HashRouter>
+    </StrictMode>
+  );
+  console.log('✅ NAMTLS E-Voting System mounted successfully');
+} catch (err) {
+  rootElement.innerHTML = `
+    <div style="min-height:100vh;background:#1e3a5f;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;font-family:Arial,sans-serif;text-align:center;">
+      <h1 style="font-size:28px;margin-bottom:16px;">NAMTLS Election</h1>
+      <div style="background:#dc2626;padding:20px;border-radius:8px;max-width:600px;width:100%;margin-bottom:20px;">
+        <h2 style="font-size:18px;margin:0 0 8px 0;color:#fff;">⚠️ CRITICAL ERROR</h2>
+        <p style="margin:0;color:#fef2f2;font-family:monospace;font-size:14px;word-break:break-all;">${err.message || 'Unknown error'}</p>
+      </div>
+      <p style="font-size:14px;color:#94a3b8;">Check browser console (F12) for full stack trace</p>
+    </div>
+  `;
+  console.error('❌ React initialization failed:', err);
 }
-
-import { createRoot } from 'react-dom/client'
-import { createElement, Component, StrictMode } from 'react'
-import { HashRouter } from 'react-router-dom'
-import App from './App.jsx'
-import './index.css'
-
-console.log('APP_START: NAMTLS Election initializing...');
-
-class ErrorBoundary extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-  componentDidCatch(error, errorInfo) {
-    console.error("=== ERRORBOUNDARY CAUGHT ===") // <-- upgraded this
-    console.error("Error:", error.toString())
-    console.error("ComponentStack:", errorInfo.componentStack) // <-- this prints file:line
-  }
-  render() {
-    if (this.state.hasError) {
-      return createElement('div', {
-        style: {
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#1e3a5f',
-          color: 'white',
-          fontFamily: 'Arial, sans-serif',
-          padding: '20px',
-          textAlign: 'center'
-        }
-      },
-        createElement('h1', { style: { fontSize: '28px', marginBottom: '16px' } }, 'NAMTLS Election'),
-        createElement('p', { style: { fontSize: '18px', marginBottom: '8px' } }, 'App loaded but an error occurred'),
-        createElement('p', { style: { color: '#fbbf24', fontSize: '14px', maxWidth: '500px' } },
-          this.state.error?.message || 'Unknown error'
-        ),
-        createElement('p', { style: { marginTop: '20px', fontSize: '12px', color: '#94a3b8' } },
-          'Please check the browser console (F12) for details'
-        )
-      );
-    }
-    return this.props.children;
-  }
-}
-
-const root = createRoot(document.getElementById('root'));
-root.render(
-  createElement(StrictMode, null,
-    createElement(ErrorBoundary, null,
-      createElement(HashRouter, null,
-        createElement(App, null)
-      )
-    )
-  )
-);
-
-console.log('RENDER_OK: App mounted successfully');
