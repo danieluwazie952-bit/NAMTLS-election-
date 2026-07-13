@@ -16,9 +16,9 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-blue-700">
+    <div className="min-h-screen bg-navy flex items-center justify-center p-8">
       <form onSubmit={handleLogin} className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-blue-900 mb-6">Admin Login</h2>
+        <h2 className="text-2xl font-bold text-navy mb-6 text-center">Admin Login</h2>
         <input
           type="text"
           placeholder="Username"
@@ -35,10 +35,7 @@ export default function AdminLogin() {
           className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-        >
+        <button type="submit" className="w-full bg-navy text-white p-3 rounded font-bold hover:bg-blue-900 transition">
           Login
         </button>
       </form>
