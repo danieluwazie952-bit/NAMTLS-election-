@@ -10,24 +10,29 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('candidates')) || [];
-    const savedSettings = JSON.parse(localStorage.getItem('electionSettings')) || {};
-    const savedStudent = JSON.parse(localStorage.getItem('studentInfo'));
+    try {
+      const saved = JSON.parse(localStorage.getItem('candidates')) || [];
+      const savedSettings = JSON.parse(localStorage.getItem('electionSettings')) || {};
+      const savedStudent = JSON.parse(localStorage.getItem('studentInfo'));
 
-    if(!savedStudent) {
-      navigate('/student-login');
-      return;
+      if(!savedStudent) {
+        navigate('/student-login');
+        return;
+      }
+
+      setStudent(savedStudent);
+      setCandidates(saved);
+      setSettings(savedSettings);
+      setHasVoted(localStorage.getItem('voted') === 'true');
+    } catch(e) {
+      console.log("Error loading data", e)
     }
-
-    setStudent(savedStudent);
-    setCandidates(saved);
-    setSettings(savedSettings);
-    setHasVoted(localStorage.getItem('voted') === 'true');
     setLoading(false);
   }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('studentInfo');
+    localStorage.removeItem('voted');
     navigate('/student-login');
   };
 
@@ -46,33 +51,30 @@ export default function StudentDashboard() {
 
   if(loading) {
     return (
-      <div className="min-h-screen bg-green-800 flex-col items-center justify-center">
+      <div className="min-h-screen bg-green-800 flex-col items-center justify-center"> {/* FIXED flex-col */}
         <img src="/logo.png" alt="Logo" className="w-32 h-32 mb-4 animate-pulse" />
         <p className="text-white text-xl font-semibold">Loading Voting Portal...</p>
       </div>
     )
   }
 
-  if (!student) return null;
+  if (!student) {
+    return <div className="min-h-screen flex flex-col items-center justify-center">Redirecting...</div>
+  }
 
-  // THIS IS THE KEY: If admin has NOT activated, it stays on "COMING SOON"
   if (!isElectionReady ||!isElectionTime) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex-col items-center justify-center text-white px-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex flex-col items-center justify-center text-white px-4"> {/* FIXED flex-col */}
         <button onClick={handleLogout} className="absolute top-4 right-4 bg-red-600 px-4 py-2 rounded">Logout</button>
         <h1 className="text-5xl font-bold text-center">ELECTION COMING SOON</h1>
-
         {isElectionReady && settings.date && settings.time && (
           <p className="mt-4 text-lg">Election starts: {settings.date} at {settings.time}</p>
         )}
-
         <p className="mt-2">Welcome, {student.name}</p>
-        <p className="mt-2 text-sm text-gray-400">Check back later to vote</p>
       </div>
     );
   }
 
-  // ONLY SHOW VOTING WHEN ADMIN ACTIVATES AND TIME HAS REACHED
   return (
     <div className="p-8 bg-gray-50 min-h-screen relative">
       <img src="/logo.png" alt="Watermark" className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] opacity-5 pointer-events-none" />
