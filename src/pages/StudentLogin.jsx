@@ -18,8 +18,10 @@ export default function StudentLogin() {
       setAuthMode('login');
       return;
     }
+
     const newStudent = { ...form, hasVoted: false };
-    localStorage.setItem('students', JSON.stringify([...students, newStudent]));
+    const updatedStudents = [...students, newStudent];
+    localStorage.setItem('students', JSON.stringify(updatedStudents));
     localStorage.setItem('studentInfo', JSON.stringify(newStudent));
     navigate('/student');
   };
@@ -36,53 +38,78 @@ export default function StudentLogin() {
       return;
     }
     localStorage.setItem('studentInfo', JSON.stringify(foundStudent));
+    localStorage.setItem('voted', foundStudent.hasVoted ? 'true' : 'false');
     navigate('/student');
   };
 
   return (
-    <div className="min-h-screen bg-navy flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h1 className="text-2xl font-bold text-navy mb-2">
+    <div style={{
+      minHeight: '100vh',
+      background: '#003366',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '16px'
+    }}>
+      <div style={{
+        background: 'white',
+        padding: '32px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        width: '100%',
+        maxWidth: '400px'
+      }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#003366', marginBottom: '8px' }}>
           {authMode === 'signup' ? 'Student Registration' : 'Student Login'}
         </h1>
-        <p className="text-gray-600 mb-6">
+        <p style={{ color: '#666', marginBottom: '24px' }}>
           {authMode === 'signup' ? 'Create account to continue' : 'Login to continue'}
         </p>
 
-        {authMode === 'signup' && (
+        {authMode === 'signup' ? (
           <>
-            <input type="text" placeholder="Full Name" value={form.name}
+            <input
+              type="text" placeholder="Full Name" value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full p-3 border rounded mb-3" />
-            <input type="text" placeholder="Matric Number" value={form.matric}
+              style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px' }}
+            />
+            <input
+              type="text" placeholder="Matric Number" value={form.matric}
               onChange={(e) => setForm({ ...form, matric: e.target.value })}
-              className="w-full p-3 border rounded mb-3" />
-            <input type="text" placeholder="Level (e.g. 200)" value={form.level}
+              style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px' }}
+            />
+            <input
+              type="text" placeholder="Level (e.g. 200)" value={form.level}
               onChange={(e) => setForm({ ...form, level: e.target.value })}
-              className="w-full p-3 border rounded mb-3" />
-            <button onClick={handleSignup}
-              className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 font-semibold">
+              style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px' }}
+            />
+            <button
+              onClick={handleSignup}
+              style={{ width: '100%', padding: '12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
               Register
             </button>
-            <p className="text-center mt-4 text-sm">
+            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px' }}>
               Already have an account?{' '}
-              <button onClick={() => setAuthMode('login')} className="text-blue-600 underline">Login</button>
+              <button onClick={() => setAuthMode('login')} style={{ color: '#2563eb', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>Login</button>
             </p>
           </>
-        )}
-
-        {authMode === 'login' && (
+        ) : (
           <>
-            <input type="text" placeholder="Matric Number" value={loginForm.matric}
+            <input
+              type="text" placeholder="Matric Number" value={loginForm.matric}
               onChange={(e) => setLoginForm({ ...loginForm, matric: e.target.value })}
-              className="w-full p-3 border rounded mb-4" />
-            <button onClick={handleLogin}
-              className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 font-semibold">
+              style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '16px' }}
+            />
+            <button
+              onClick={handleLogin}
+              style={{ width: '100%', padding: '12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
               Login
             </button>
-            <p className="text-center mt-4 text-sm">
+            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px' }}>
               Don't have an account?{' '}
-              <button onClick={() => setAuthMode('signup')} className="text-blue-600 underline">Register</button>
+              <button onClick={() => setAuthMode('signup')} style={{ color: '#2563eb', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>Register</button>
             </p>
           </>
         )}
