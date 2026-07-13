@@ -3,6 +3,7 @@ import AdminLogin from './pages/AdminLogin';
 import Landing from './pages/Landing';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentDashboard from './pages/StudentDashboard';
+import StudentLogin from './pages/StudentLogin'; // <-- ADDED THIS LINE
 import Watermark from './components/Watermark';
 
 console.log('ROUTES_LOADED: Setting up routes...');
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/student-login" element={<StudentLogin />} /> {/* <-- ADDED THIS LINE */}
         <Route path="/student/dashboard" element={<StudentDashboard />} />
       </Routes>
     </>
