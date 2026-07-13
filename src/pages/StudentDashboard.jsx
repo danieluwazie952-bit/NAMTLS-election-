@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Watermark from '../components/Watermark';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -15,7 +16,7 @@ export default function StudentDashboard() {
       const savedSettings = JSON.parse(localStorage.getItem('electionSettings')) || {};
       const savedStudent = JSON.parse(localStorage.getItem('studentInfo'));
 
-      if(!savedStudent) {
+      if (!savedStudent) {
         navigate('/student-login');
         return;
       }
@@ -24,8 +25,8 @@ export default function StudentDashboard() {
       setCandidates(saved);
       setSettings(savedSettings);
       setHasVoted(localStorage.getItem('voted') === 'true');
-    } catch(e) {
-      console.log("Error loading data", e)
+    } catch (e) {
+      console.log("Error loading data", e);
     }
     setLoading(false);
   }, [navigate]);
@@ -37,68 +38,78 @@ export default function StudentDashboard() {
   };
 
   const isElectionReady = settings.isActive && candidates.length > 0 && settings.date && settings.time;
-  const electionDateTime = settings.date && settings.time? new Date(`${settings.date}T${settings.time}`) : null;
-  const isElectionTime = electionDateTime? new Date() >= electionDateTime : false;
+  const electionDateTime = settings.date && settings.time ? new Date(`${settings.date}T${settings.time}`) : null;
+  const isElectionTime = electionDateTime ? new Date() >= electionDateTime : false;
 
   const handleVote = (id) => {
-    const updated = candidates.map(c => c.id === id? {...c, votes: (c.votes || 0) + 1} : c);
+    const updated = candidates.map(c => c.id === id ? { ...c, votes: (c.votes || 0) + 1 } : c);
     setCandidates(updated);
     localStorage.setItem('candidates', JSON.stringify(updated));
     localStorage.setItem('voted', 'true');
     setHasVoted(true);
     alert('Vote Submitted Successfully');
-  }
+  };
 
-  if(loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-green-800 flex-col items-center justify-center"> {/* FIXED flex-col */}
-        <img src="/logo.png" alt="Logo" className="w-32 h-32 mb-4 animate-pulse" />
-        <p className="text-white text-xl font-semibold">Loading Voting Portal...</p>
+      <div className="min-h-screen bg-navy flex flex-col items-center justify-center text-white">
+        <Watermark />
+        <p className="mt-4 text-lg">Loading Voting Portal...</p>
       </div>
-    )
+    );
   }
 
   if (!student) {
-    return <div className="min-h-screen flex flex-col items-center justify-center">Redirecting...</div>
+    return <div className="min-h-screen bg-navy flex items-center justify-center text-white">Redirecting...</div>;
   }
 
-  if (!isElectionReady ||!isElectionTime) {
+  if (!isElectionReady || !isElectionTime) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex flex-col items-center justify-center text-white px-4"> {/* FIXED flex-col */}
-        <button onClick={handleLogout} className="absolute top-4 right-4 bg-red-600 px-4 py-2 rounded">Logout</button>
-        <h1 className="text-5xl font-bold text-center">ELECTION COMING SOON</h1>
+      <div className="min-h-screen bg-navy flex flex-col items-center justify-center text-white p-8">
+        <Watermark />
+        <button onClick={handleLogout} className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Logout</button>
+        <h1 className="text-4xl font-bold text-gold mb-4">ELECTION COMING SOON</h1>
         {isElectionReady && settings.date && settings.time && (
-          <p className="mt-4 text-lg">Election starts: {settings.date} at {settings.time}</p>
+          <p className="text-lg mb-2">Election starts: {settings.date} at {settings.time}</p>
         )}
-        <p className="mt-2">Welcome, {student.name}</p>
+        <p className="text-xl">Welcome, {student.name}</p>
       </div>
     );
   }
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen relative">
-      <img src="/logo.png" alt="Watermark" className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] opacity-5 pointer-events-none" />
-      <button onClick={handleLogout} className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded z-20">Logout</button>
+    <div className="min-h-screen bg-navy text-white p-8">
+      <Watermark />
+      <button onClick={handleLogout} className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Logout</button>
 
-      <div className="relative z-10">
-        <h1 className="text-3xl font-bold mb-2 text-center">Student Voting Portal</h1>
-        <p className="text-center mb-2">Welcome, {student.name} - {student.matric}</p>
-        <p className="text-center mb-6">Election Year: {settings.year}</p>
-        {hasVoted? (
-          <p className="text-green-600 text-center text-xl">You have already voted. Thank you.</p>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-gold mb-6">Student Voting Portal</h1>
+        <p className="mb-2">Welcome, {student.name} - {student.matric}</p>
+        <p className="mb-6">Election Year: {settings.year}</p>
+
+        {hasVoted ? (
+          <p className="text-green-400 text-xl font-bold">You have already voted. Thank you.</p>
         ) : (
-          <div className="grid gap-6 max-w-4xl mx-auto">
+          <div className="grid gap-6 md:grid-cols-2">
             {candidates.map(candidate => (
-              <div key={candidate.id} className="bg-white p-6 rounded-lg shadow">
-                <div className="flex flex-col md:flex-row items-center gap-6">
-                  <img src={candidate.photo} alt={candidate.name} className="w-32 h-32 object-cover rounded-full border-4 border-green-600" />
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold">{candidate.name}</h2>
-                    <p className="text-lg text-blue-700 font-semibold">Position: {candidate.position}</p>
-                    <p className="mt-3"><b>Manifesto:</b> {candidate.manifesto || 'No manifesto provided'}</p>
-                  </div>
-                  <button onClick={() => handleVote(candidate.id)} className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-bold">Vote</button>
-                </div>
+              <div key={candidate.id} className="bg-white text-gray-800 rounded-lg p-6 shadow-lg">
+                {candidate.photoURL && (
+                  <img
+                    src={candidate.photoURL}
+                    alt={candidate.name}
+                    className="w-24 h-24 rounded-full object-cover mx-auto mb-4"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                )}
+                <h2 className="text-xl font-bold text-center">{candidate.name}</h2>
+                <p className="text-center text-gray-600">Position: {candidate.position}</p>
+                <p className="mt-2 text-sm"><strong>Manifesto:</strong> {candidate.manifesto || 'No manifesto provided'}</p>
+                <button
+                  onClick={() => handleVote(candidate.id)}
+                  className="mt-4 w-full bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-bold"
+                >
+                  Vote
+                </button>
               </div>
             ))}
           </div>
