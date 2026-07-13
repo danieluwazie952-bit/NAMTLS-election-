@@ -10,19 +10,20 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 1500);
     const saved = JSON.parse(localStorage.getItem('candidates')) || [];
     const savedSettings = JSON.parse(localStorage.getItem('electionSettings')) || {};
+    const savedStudent = JSON.parse(localStorage.getItem('studentInfo'));
+
+    if(!savedStudent) {
+      navigate('/student-login'); // If not logged in, send back
+      return;
+    }
+
+    setStudent(savedStudent);
     setCandidates(saved);
     setSettings(savedSettings);
     setHasVoted(localStorage.getItem('voted') === 'true');
-
-    const savedStudent = JSON.parse(localStorage.getItem('studentInfo'));
-    if(!savedStudent) {
-      navigate('/student-login'); // If not logged in, send back
-    } else {
-      setStudent(savedStudent);
-    }
+    setLoading(false); // Stop loading only after we check everything
   }, [navigate]);
 
   const handleLogout = () => {
@@ -30,12 +31,13 @@ export default function StudentDashboard() {
     navigate('/student-login');
   };
 
+  // FIX 1: Add default values so it doesn't crash
   const isElectionReady = settings.isActive && candidates.length > 0 && settings.date && settings.time;
-  const electionDateTime = new Date(`${settings.date}T${settings.time}`);
+  const electionDateTime = settings.date && settings.time? new Date(`${settings.date}T${settings.time}`) : new Date(0);
   const isElectionTime = new Date() >= electionDateTime;
 
   const handleVote = (id) => {
-    const updated = candidates.map(c => c.id === id? {...c, votes: c.votes + 1} : c);
+    const updated = candidates.map(c => c.id === id? {...c, votes: (c.votes || 0) + 1} : c);
     setCandidates(updated);
     localStorage.setItem('candidates', JSON.stringify(updated));
     localStorage.setItem('voted', 'true');
@@ -45,30 +47,34 @@ export default function StudentDashboard() {
 
   if(loading) {
     return (
-      <div className="min-h-screen bg-green-800 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-green-800 flex-col items-center justify-center">
         <img src="/logo.png" alt="Logo" className="w-32 h-32 mb-4 animate-pulse" />
         <p className="text-white text-xl font-semibold">Loading Voting Portal...</p>
       </div>
     )
   }
 
+  // FIX 2: Don't show student?.name if student is still null
+  if (!student) return null;
+
   if (!isElectionReady) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex flex-col items-center justify-center text-white px-4">
         <button onClick={handleLogout} className="absolute top-4 right-4 bg-red-600 px-4 py-2 rounded">Logout</button>
-        <h1 className="text-5xl font-bold text-center">ELECTION COMING SOON</h1>
-        <p className="mt-4 text-lg">Welcome, {student?.name}</p>
+        <h1 className="text-5xl font-bold text-center">ELECTION NOT SETUP</h1>
+        <p className="mt-4 text-lg">Welcome, {student.name}</p>
+        <p className="mt-2 text-sm text-gray-300">Admin needs to add candidates and set election date/time</p>
       </div>
     );
   }
 
   if (!isElectionTime) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex flex-col items-center justify-center text-white px-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-black flex-col items-center justify-center text-white px-4">
         <button onClick={handleLogout} className="absolute top-4 right-4 bg-red-600 px-4 py-2 rounded">Logout</button>
         <h1 className="text-5xl font-bold text-center">ELECTION COMING SOON</h1>
         <p className="mt-4 text-lg">Election starts: {settings.date} at {settings.time}</p>
-        <p className="mt-2">Welcome, {student?.name}</p>
+        <p className="mt-2">Welcome, {student.name}</p>
       </div>
     );
   }
@@ -80,7 +86,7 @@ export default function StudentDashboard() {
 
       <div className="relative z-10">
         <h1 className="text-3xl font-bold mb-2 text-center">Student Voting Portal</h1>
-        <p className="text-center mb-2">Welcome, {student?.name} - {student?.matric}</p>
+        <p className="text-center mb-2">Welcome, {student.name} - {student.matric}</p>
         <p className="text-center mb-6">Election Year: {settings.year}</p>
         {hasVoted? (
           <p className="text-green-600 text-center text-xl">You have already voted. Thank you.</p>
