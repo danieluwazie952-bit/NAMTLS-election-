@@ -1,3 +1,20 @@
+console.log("=== NAMTLS DEBUG START ===")
+console.log("VITE_ENV:", import.meta.env.MODE)
+console.log("REACT CHECK:", typeof React)
+console.log("CREATEELEMENT CHECK:", typeof createElement)
+
+window.addEventListener('error', (e) => {
+  console.error("=== GLOBAL ERROR CAUGHT ===")
+  console.error("Message:", e.message)
+  console.error("File:", e.filename)
+  console.error("Line:", e.lineno, "Col:", e.colno)
+  console.error("Stack:", e.error?.stack)
+})
+
+if(typeof React === 'undefined') {
+  console.error("FATAL: React is not defined. This will crash JSX")
+}
+
 import { createRoot } from 'react-dom/client'
 import { createElement, Component, StrictMode } from 'react'
 import { HashRouter } from 'react-router-dom'
@@ -15,7 +32,9 @@ class ErrorBoundary extends Component {
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
-    console.error('RENDER_ERROR:', error, errorInfo);
+    console.error("=== ERRORBOUNDARY CAUGHT ===") // <-- upgraded this
+    console.error("Error:", error.toString())
+    console.error("ComponentStack:", errorInfo.componentStack) // <-- this prints file:line
   }
   render() {
     if (this.state.hasError) {
