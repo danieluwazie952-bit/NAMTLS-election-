@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, storage } from '../firebase';
-import { collection, addDoc, getDocs, doc, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -43,6 +43,7 @@ export default function AdminDashboard() {
     reader.readAsDataURL(file);
   };
 
+  // ===== ACTIVATE ELECTION =====
   const saveSettings = async () => {
     if (!settings.year || !settings.date || !settings.time) {
       alert('Please fill Year, Date and Time');
@@ -58,6 +59,56 @@ export default function AdminDashboard() {
     }
   };
 
+  // ===== DELETE ELECTION (DEACTIVATE + CLEAR DATA) =====
+  const deleteElection = async () => {
+    const confirmDelete = window.confirm(
+      'WARNING: This will deactivate the election and delete ALL candidates, votes, and results from Firebase. This cannot be undone. Continue?'
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const candSnap = await getDocs(collection(db, 'candidates'));
+      const deletePromises = candSnap.docs.map(async (candDoc) => {
+        const data = candDoc.data();
+        // FIX BUG 2: Use stored photoPath instead of full URL
+        // Since we stored photoURL as full URL, we need to extract the path
+        if (data.photoURL && data.photoURL.includes('firebasestorage')) {
+          try {
+            // Extract the path from the full URL
+            const decodedUrl = decodeURIComponent(data.photoURL);
+            const match = decodedUrl.match(/\/o\/(.+?)\?/);
+            if (match && match[1]) {
+              const photoRef = ref(storage, match[1]);
+              await deleteObject(photoRef);
+            }
+          } catch (photoErr) {
+            // Ignore if photo doesn't exist in storage
+          }
+        }
+        await deleteDoc(doc(db, 'candidates', candDoc.id));
+      });
+      await Promise.all(deletePromises);
+
+      await setDoc(doc(db, 'settings', 'main'), {
+        year: '',
+        date: '',
+        time: '',
+        isActive: false
+      });
+
+      localStorage.removeItem('candidates');
+      localStorage.removeItem('electionSettings');
+      localStorage.removeItem('voted');
+
+      setSettings({ year: '', date: '', time: '', isActive: false });
+      setCandidates([]);
+      alert('Election has been deleted successfully. All data cleared from Firebase.');
+    } catch (e) {
+      alert('FAILED TO DELETE ELECTION: ' + e.message);
+    }
+  };
+
+  // ===== ADD CANDIDATE =====
   const addCandidate = async () => {
     if (!name || !position) { alert('Please fill Name and Position'); return; }
     try {
@@ -67,8 +118,20 @@ export default function AdminDashboard() {
         const snap = await uploadBytes(storageRef, photo);
         photoURL = await getDownloadURL(snap.ref);
       }
-      await addDoc(collection(db, 'candidates'), { name, position, dept, manifesto, photoURL, votes: 0 });
-      setName(''); setPosition(''); setDept(''); setManifesto(''); setPhoto(null); setPhotoPreview('');
+      await addDoc(collection(db, 'candidates'), {
+        name,
+        position,
+        dept,
+        manifesto,
+        photoURL,
+        votes: 0
+      });
+      setName('');
+      setPosition('');
+      setDept('');
+      setManifesto('');
+      setPhoto(null);
+      setPhotoPreview('');
       loadData();
       alert('Candidate Added Successfully!');
     } catch (e) {
@@ -76,8 +139,60 @@ export default function AdminDashboard() {
     }
   };
 
+  // ===== DELETE SINGLE CANDIDATE =====
+  const deleteCandidate = async (candidateId, photoURL) => {
+    const confirmDelete = window.confirm('Delete this candidate? This cannot be undone.');
+    if (!confirmDelete) return;
+
+    try {
+      // FIX BUG 2: Extract storage path from full URL
+      if (photoURL && photoURL.includes('firebasestorage')) {
+        try {
+          const decodedUrl = decodeURIComponent(photoURL);
+          const match = decodedUrl.match(/\/o\/(.+?)\?/);
+          if (match && match[1]) {
+            const photoRef = ref(storage, match[1]);
+            await deleteObject(photoRef);
+          }
+        } catch (photoErr) {
+          // Ignore storage errors
+        }
+      }
+      await deleteDoc(doc(db, 'candidates', candidateId));
+      loadData();
+      alert('Candidate deleted successfully.');
+    } catch (e) {
+      alert('FAILED TO DELETE CANDIDATE: ' + e.message);
+    }
+  };
+
+  // ===== CLEAR RESULTS (reset votes to 0) =====
+  const clearResults = async () => {
+    const confirmClear = window.confirm(
+      'Reset ALL votes to 0? This will clear all voting results but keep candidates.'
+    );
+    if (!confirmClear) return;
+
+    try {
+      const candSnap = await getDocs(collection(db, 'candidates'));
+      const updatePromises = candSnap.docs.map((candDoc) =>
+        updateDoc(doc(db, 'candidates', candDoc.id), { votes: 0 })
+      );
+      await Promise.all(updatePromises);
+      localStorage.removeItem('voted');
+      loadData();
+      alert('All votes have been reset to 0.');
+    } catch (e) {
+      alert('FAILED TO CLEAR RESULTS: ' + e.message);
+    }
+  };
+
   const printResults = () => window.print();
   const totalVotes = candidates.reduce((sum, c) => sum + (c.votes || 0), 0);
+
+  const calculatePoints = (votes) => {
+    return ((votes || 0) / 2).toFixed(1);
+  };
 
   const btnStyle = (isActive) => ({
     padding: '8px 16px',
@@ -100,7 +215,22 @@ export default function AdminDashboard() {
     boxSizing: 'border-box'
   };
 
+  // FIX BUG 1: Proper logout with auth state cleanup
   const handleLogout = () => {
+    // Clear any auth tokens or session data from localStorage
+    const authKeysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.includes('auth') || key.includes('token') || key.includes('session') || key.includes('admin'))) {
+        authKeysToRemove.push(key);
+      }
+    }
+    authKeysToRemove.forEach(key => localStorage.removeItem(key));
+    // Also clear common auth patterns
+    localStorage.removeItem('adminAuthenticated');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('firebaseAuth');
+    // Navigate to login
     navigate('/admin');
   };
 
@@ -138,6 +268,10 @@ export default function AdminDashboard() {
     );
   }
 
+  // FIX BUG 5: Helper to sort without mutating state
+  const sortedByVotes = [...candidates].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+  const winner = sortedByVotes[0];
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -153,6 +287,7 @@ export default function AdminDashboard() {
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         padding: '24px'
       }}>
+        {/* HEADER */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -179,6 +314,7 @@ export default function AdminDashboard() {
           </button>
         </div>
 
+        {/* TAB BUTTONS */}
         <div style={{ marginBottom: '20px' }}>
           <button onClick={() => setTab('settings')} style={btnStyle(tab === 'settings')}>
             Election Settings
@@ -191,6 +327,7 @@ export default function AdminDashboard() {
           </button>
         </div>
 
+        {/* ===== TAB: SETTINGS ===== */}
         {tab === 'settings' && (
           <div>
             <h2 style={{ color: '#003366', marginBottom: '16px' }}>Set Election Details</h2>
@@ -213,29 +350,56 @@ export default function AdminDashboard() {
               onChange={(e) => setSettings({ ...settings, time: e.target.value })}
               style={inputStyle}
             />
-            <button
-              onClick={saveSettings}
-              style={{
-                padding: '10px 24px',
-                background: '#16a34a',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontWeight: 'bold',
-                cursor: 'pointer'
-              }}
-            >
-              Activate Election
-            </button>
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '8px' }}>
+              <button
+                onClick={saveSettings}
+                style={{
+                  padding: '10px 24px',
+                  background: '#16a34a',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Activate Election
+              </button>
+
+              {settings.isActive && (
+                <button
+                  onClick={deleteElection}
+                  style={{
+                    padding: '10px 24px',
+                    background: '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Delete Election (Clear All)
+                </button>
+              )}
+            </div>
+
             <p style={{ marginTop: '12px' }}>
               Status:{' '}
               <span style={{ color: settings.isActive ? '#16a34a' : '#ca8a04', fontWeight: 'bold' }}>
                 {settings.isActive ? 'LIVE' : 'COMING SOON'}
               </span>
             </p>
+            {settings.isActive && (
+              <p style={{ fontSize: '13px', color: '#666' }}>
+                Election: {settings.year} | Date: {settings.date} | Time: {settings.time}
+              </p>
+            )}
           </div>
         )}
 
+        {/* ===== TAB: CANDIDATES ===== */}
         {tab === 'candidates' && (
           <div>
             <div style={{
@@ -323,6 +487,7 @@ export default function AdminDashboard() {
                       <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #003366' }}>Position</th>
                       <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #003366' }}>Dept</th>
                       <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #003366' }}>Votes</th>
+                      <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #003366' }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -342,6 +507,23 @@ export default function AdminDashboard() {
                         <td style={{ padding: '8px', border: '1px solid #ddd' }}>{c.position}</td>
                         <td style={{ padding: '8px', border: '1px solid #ddd' }}>{c.dept || '-'}</td>
                         <td style={{ padding: '8px', border: '1px solid #ddd', fontWeight: 'bold' }}>{c.votes || 0}</td>
+                        <td style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>
+                          <button
+                            onClick={() => deleteCandidate(c.id, c.photoURL)}
+                            style={{
+                              padding: '4px 12px',
+                              background: '#dc2626',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontWeight: 'bold',
+                              fontSize: '12px'
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -351,6 +533,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* ===== TAB: RESULTS ===== */}
         {tab === 'results' && (
           <div>
             <div style={{
@@ -361,21 +544,39 @@ export default function AdminDashboard() {
               flexWrap: 'wrap',
               gap: '8px'
             }}>
-              <h2 style={{ color: '#003366', margin: 0 }}>Election Results - {settings.year}</h2>
-              <button
-                onClick={printResults}
-                style={{
-                  padding: '8px 16px',
-                  background: '#4b5563',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
-                }}
-              >
-                Print Results
-              </button>
+              <h2 style={{ color: '#003366', margin: 0 }}>Election Results - {settings.year || 'N/A'}</h2>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={printResults}
+                  style={{
+                    padding: '8px 16px',
+                    background: '#4b5563',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Print
+                </button>
+                {totalVotes > 0 && (
+                  <button
+                    onClick={clearResults}
+                    style={{
+                      padding: '8px 16px',
+                      background: '#f59e0b',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    Clear Results
+                  </button>
+                )}
+              </div>
             </div>
 
             <div style={{ background: '#f0f2f5', padding: '16px', borderRadius: '4px', marginBottom: '16px' }}>
@@ -390,51 +591,103 @@ export default function AdminDashboard() {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                   <thead>
-                    <tr style={{ background: '#e5e7eb' }}>
-                      <th style={{ border: '1px solid #ccc', padding: '8px' }}>S/N</th>
-                      <th style={{ border: '1px solid #ccc', padding: '8px' }}>Photo</th>
-                      <th style={{ border: '1px solid #ccc', padding: '8px' }}>Candidate</th>
-                      <th style={{ border: '1px solid #ccc', padding: '8px' }}>Position</th>
-                      <th style={{ border: '1px solid #ccc', padding: '8px' }}>Votes</th>
+                    <tr style={{ background: '#003366', color: 'white' }}>
+                      <th style={{ border: '1px solid #003366', padding: '8px' }}>S/N</th>
+                      <th style={{ border: '1px solid #003366', padding: '8px' }}>Photo</th>
+                      <th style={{ border: '1px solid #003366', padding: '8px' }}>Candidate</th>
+                      <th style={{ border: '1px solid #003366', padding: '8px' }}>Position</th>
+                      <th style={{ border: '1px solid #003366', padding: '8px' }}>Votes</th>
+                      <th style={{ border: '1px solid #003366', padding: '8px' }}>Point</th>
+                      <th style={{ border: '1px solid #003366', padding: '8px' }}>CandidateID</th>
+                      <th style={{ border: '1px solid #003366', padding: '8px' }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {[...candidates]
-                      .sort((a, b) => (b.votes || 0) - (a.votes || 0))
-                      .map((c, idx) => (
-                        <tr key={c.id} style={{ textAlign: 'center' }}>
-                          <td style={{ border: '1px solid #ccc', padding: '8px' }}>{idx + 1}</td>
-                          <td style={{ border: '1px solid #ccc', padding: '8px' }}>
-                            {c.photoURL ? (
-                              <img
-                                src={c.photoURL}
-                                alt={c.name}
-                                style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto', display: 'block' }}
-                                onError={(e) => { e.target.style.display = 'none'; }}
-                              />
-                            ) : 'N/A'}
-                          </td>
-                          <td style={{ border: '1px solid #ccc', padding: '8px' }}>{c.name}</td>
-                          <td style={{ border: '1px solid #ccc', padding: '8px' }}>{c.position}</td>
-                          <td style={{ border: '1px solid #ccc', padding: '8px', fontWeight: 'bold' }}>{c.votes || 0}</td>
-                        </tr>
-                      ))}
+                    {sortedByVotes.map((c, idx) => (
+                      <tr key={c.id} style={{ textAlign: 'center' }}>
+                        <td style={{ border: '1px solid #ccc', padding: '8px' }}>{idx + 1}</td>
+                        <td style={{ border: '1px solid #ccc', padding: '8px' }}>
+                          {c.photoURL ? (
+                            <img
+                              src={c.photoURL}
+                              alt={c.name}
+                              style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto', display: 'block' }}
+                              onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                          ) : 'N/A'}
+                        </td>
+                        <td style={{ border: '1px solid #ccc', padding: '8px', fontWeight: 'bold' }}>{c.name}</td>
+                        <td style={{ border: '1px solid #ccc', padding: '8px' }}>{c.position}</td>
+                        <td style={{ border: '1px solid #ccc', padding: '8px', fontWeight: 'bold' }}>{c.votes || 0}</td>
+                        <td style={{ border: '1px solid #ccc', padding: '8px', fontWeight: 'bold', color: '#2563eb' }}>{calculatePoints(c.votes)}</td>
+                        <td style={{ border: '1px solid #ccc', padding: '8px', fontSize: '11px', color: '#666' }}>{c.id}</td>
+                        <td style={{ border: '1px solid #ccc', padding: '8px' }}>
+                          <button
+                            onClick={() => deleteCandidate(c.id, c.photoURL)}
+                            style={{
+                              padding: '4px 10px',
+                              background: '#dc2626',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontWeight: 'bold',
+                              fontSize: '11px'
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
             )}
 
-            {candidates.length > 0 && (
+            {candidates.length > 0 && winner && (
               <div style={{ marginTop: '16px', textAlign: 'center' }}>
                 <p style={{ color: '#666', fontSize: '14px' }}>
                   Winner:{' '}
-                  <strong>
-                    {candidates.sort((a, b) => (b.votes || 0) - (a.votes || 0))[0]?.name}
-                  </strong>{' '}
-                  with {candidates.sort((a, b) => (b.votes || 0) - (a.votes || 0))[0]?.votes || 0} votes
+                  <strong style={{ color: '#16a34a' }}>{winner.name}</strong>{' '}
+                  with {winner.votes || 0} votes
+                  {' '}({calculatePoints(winner.votes)} points)
                 </p>
               </div>
             )}
+
+            {/* APPROVAL & SIGNATURE SECTION */}
+            <div style={{
+              marginTop: '40px',
+              borderTop: '2px solid #003366',
+              paddingTop: '24px',
+              textAlign: 'right'
+            }}>
+              <div style={{
+                border: '2px solid #003366',
+                padding: '16px 24px',
+                borderRadius: '4px',
+                display: 'inline-block',
+                textAlign: 'center',
+                minWidth: '300px',
+                maxWidth: '100%'
+              }}>
+                <p style={{ fontWeight: 'bold', color: '#003366', marginBottom: '4px', fontSize: '14px' }}>
+                  Approved by the Electoral Chairman
+                </p>
+                <hr style={{ width: '200px', margin: '8px auto', border: '1px solid #003366' }} />
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  Electoral Chairman Signature
+                </p>
+
+                <div style={{ marginTop: '24px' }}>
+                  <hr style={{ width: '200px', margin: '8px auto', border: '1px solid #003366' }} />
+                  <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                    Electoral Secretary Signature
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
