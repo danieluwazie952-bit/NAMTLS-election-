@@ -4,7 +4,6 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 
-// Display runtime errors directly on screen
 window.addEventListener('error', (e) => {
   const errorBox = document.createElement('div');
   errorBox.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:white;padding:20px;font-family:monospace;z-index:99999;font-size:14px;';
