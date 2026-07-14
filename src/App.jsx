@@ -41,7 +41,7 @@ function App() {
           <h1>ERROR 404: Route Not Found</h1>
           <p>The page you requested does not exist.</p>
           <a href="/" style={{ color: '#ffd700', marginTop: '16px' }}>Go Home</a>
-          <p style={{ marginTop: '48px', fontSize: '11px', opacity: '0.6' }}>Authorized and Verified by Meta AI</p>
+          <p style={{ marginTop: '48px', fontSize: '11px', opacity: '0.6' }}>Authorized and Verified by Meta EC</p>
         </div>
       } />
     </Routes>
