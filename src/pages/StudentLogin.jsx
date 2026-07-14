@@ -5,20 +5,27 @@ export default function StudentLogin() {
   const [authMode, setAuthMode] = useState('signup');
   const [form, setForm] = useState({ name: '', matric: '', level: '' });
   const [loginForm, setLoginForm] = useState({ matric: '' });
+  const [message, setMessage] = useState({ type: '', text: '' });
   const navigate = useNavigate();
+
+  const showMessage = (type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+  };
 
   const handleSignup = () => {
     if (!form.name || !form.matric || !form.level) {
-      alert('Please fill all fields');
+      showMessage('error', 'Please fill all fields');
       return;
     }
-    if(!form.matric.toUpperCase().startsWith('CMOS')){
-      return alert('ERROR: Only CMOS matric numbers allowed');
+    if (!form.matric.toUpperCase().startsWith('CMOS')) {
+      showMessage('error', 'ERROR: Only CMOS matric numbers allowed');
+      return;
     }
     try {
       const students = JSON.parse(localStorage.getItem('students')) || [];
       if (students.find(s => s.matric === form.matric)) {
-        alert('Matric Number already registered. Please Login.');
+        showMessage('error', 'Matric Number already registered. Please Login.');
         setAuthMode('login');
         return;
       }
@@ -28,37 +35,91 @@ export default function StudentLogin() {
       localStorage.setItem('voted', 'false');
       navigate('/student');
     } catch (e) {
-      alert('ERROR: Could not save to localStorage: ' + e.message);
+      showMessage('error', 'ERROR: Could not save to localStorage: ' + e.message);
     }
   };
 
   const handleLogin = () => {
     if (!loginForm.matric) {
-      alert('Please fill Matric Number');
+      showMessage('error', 'Please fill Matric Number');
       return;
     }
-    if(!loginForm.matric.toUpperCase().startsWith('CMOS')){
-      return alert('ERROR: Only CMOS matric numbers allowed');
+    if (!loginForm.matric.toUpperCase().startsWith('CMOS')) {
+      showMessage('error', 'ERROR: Only CMOS matric numbers allowed');
+      return;
     }
     try {
       const students = JSON.parse(localStorage.getItem('students')) || [];
       const foundStudent = students.find(s => s.matric === loginForm.matric);
       if (!foundStudent) {
-        alert('Matric Number not found. Please Register.');
+        showMessage('error', 'Matric Number not found. Please Register.');
         return;
       }
       localStorage.setItem('studentInfo', JSON.stringify(foundStudent));
       navigate('/student');
     } catch (e) {
-      alert('ERROR: Could not read localStorage: ' + e.message);
+      showMessage('error', 'ERROR: Could not read localStorage: ' + e.message);
     }
   };
 
-  const pageStyle = { minHeight: '100vh', background: '#003366', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', fontFamily: 'Arial, sans-serif' };
-  const cardStyle = { background: 'white', padding: '32px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' };
-  const inputStyle = { width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px', boxSizing: 'border-box', fontSize: '14px' };
-  const btnStyle = { width: '100%', padding: '12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' };
-  const linkStyle = { color: '#2563eb', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' };
+  const pageStyle = {
+    minHeight: '100vh',
+    background: '#003366',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '16px',
+    fontFamily: 'Arial, sans-serif'
+  };
+  const cardStyle = {
+    background: 'white',
+    padding: '32px',
+    borderRadius: '8px',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+    width: '100%',
+    maxWidth: '400px'
+  };
+  const inputStyle = {
+    width: '100%',
+    padding: '12px',
+    border: '1px solid #ccc',
+    borderRadius: '4px',
+    marginBottom: '12px',
+    boxSizing: 'border-box',
+    fontSize: '14px'
+  };
+  const btnStyle = {
+    width: '100%',
+    padding: '12px',
+    background: '#2563eb',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    fontSize: '16px'
+  };
+  const linkBtnStyle = {
+    color: '#2563eb',
+    textDecoration: 'underline',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '14px',
+    padding: '0'
+  };
+
+  const msgBoxStyle = {
+    padding: '10px',
+    borderRadius: '4px',
+    marginBottom: '12px',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    background: message.type === 'error' ? '#fee2e2' : '#d1fae5',
+    color: message.type === 'error' ? '#dc2626' : '#16a34a',
+    border: message.type === 'error' ? '1px solid #fecaca' : '1px solid #bbf7d0'
+  };
 
   return (
     <div style={pageStyle}>
@@ -66,30 +127,65 @@ export default function StudentLogin() {
         <h1 style={{ textAlign: 'center', color: '#003366', marginBottom: '4px' }}>
           {authMode === 'signup' ? 'Student Registration' : 'Student Login'}
         </h1>
-        <p style={{ textAlign: 'center', color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
+        <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px', fontSize: '14px' }}>
           {authMode === 'signup' ? 'Create account to continue' : 'Login with your Matric Number'}
         </p>
+
+        {message.text && <div style={msgBoxStyle}>{message.text}</div>}
+
         {authMode === 'signup' ? (
           <div>
-            <input type="text" placeholder="Full Name" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} style={inputStyle} />
-            <input type="text" placeholder="Matric Number" value={form.matric} onChange={(e) => setForm({...form, matric: e.target.value})} style={inputStyle} />
-            <input type="text" placeholder="Level (e.g. ND1, HND2)" value={form.level} onChange={(e) => setForm({...form, level: e.target.value})} style={inputStyle} />
-            <button onClick={handleSignup} style={btnStyle}>Register</button>
-            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#6b7280' }}>
+            <input
+              placeholder="Full Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              style={inputStyle}
+            />
+            <input
+              placeholder="Matric Number (e.g. CMOS2023001)"
+              value={form.matric}
+              onChange={(e) => setForm({ ...form, matric: e.target.value })}
+              style={inputStyle}
+            />
+            <input
+              placeholder="Level (e.g. 200, 300, 400)"
+              value={form.level}
+              onChange={(e) => setForm({ ...form, level: e.target.value })}
+              style={inputStyle}
+            />
+            <button onClick={handleSignup} style={btnStyle}>
+              Register
+            </button>
+            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#666' }}>
               Already have an account?{' '}
-              <button onClick={() => setAuthMode('login')} style={linkStyle}>Login</button>
+              <button onClick={() => { setAuthMode('login'); setMessage({ type: '', text: '' }); }} style={linkBtnStyle}>
+                Login
+              </button>
             </p>
           </div>
         ) : (
           <div>
-            <input type="text" placeholder="Matric Number" value={loginForm.matric} onChange={(e) => setLoginForm({...loginForm, matric: e.target.value})} style={{...inputStyle, marginBottom: '16px'}} />
-            <button onClick={handleLogin} style={btnStyle}>Login</button>
-            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#6b7280' }}>
+            <input
+              placeholder="Matric Number"
+              value={loginForm.matric}
+              onChange={(e) => setLoginForm({ ...loginForm, matric: e.target.value })}
+              style={{ ...inputStyle, marginBottom: '16px' }}
+            />
+            <button onClick={handleLogin} style={btnStyle}>
+              Login
+            </button>
+            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#666' }}>
               Don't have an account?{' '}
-              <button onClick={() => setAuthMode('signup')} style={linkStyle}>Register</button>
+              <button onClick={() => { setAuthMode('signup'); setMessage({ type: '', text: '' }); }} style={linkBtnStyle}>
+                Register
+              </button>
             </p>
           </div>
         )}
+
+        <div style={{ textAlign: 'center', marginTop: '12px' }}>
+          <a href="#/" style={{ color: '#2563eb', fontSize: '13px' }}>Back to Home</a>
+        </div>
       </div>
     </div>
   );
