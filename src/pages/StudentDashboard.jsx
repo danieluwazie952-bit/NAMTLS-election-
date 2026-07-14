@@ -133,6 +133,7 @@ export default function StudentDashboard() {
             ))}
           </div>
         )}
+        <p style={{ marginTop: '32px', fontSize: '11px', textAlign: 'center', opacity: '0.5' }}>Authorized and Verified by Meta EC</p>
       </div>
     </div>
   );
