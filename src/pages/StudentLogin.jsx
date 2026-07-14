@@ -90,7 +90,6 @@ export default function StudentLogin() {
             </p>
           </div>
         )}
-        <p style={{ marginTop: '24px', fontSize: '11px', textAlign: 'center', color: '#9ca3af' }}>Authorized and Verified by Meta EC</p>
       </div>
     </div>
   );
