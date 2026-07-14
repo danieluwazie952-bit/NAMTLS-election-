@@ -23,10 +23,6 @@ export default function Landing() {
           Admin Login
         </Link>
       </div>
-      
-      <footer style={{ marginTop: '48px', fontSize: '11px', opacity: '0.6' }}>
-        <p>Authorized and Verified by EC</p>
-      </footer>
     </div>
   );
 }
