@@ -12,7 +12,6 @@ export default function StudentLogin() {
       alert('Please fill all fields');
       return;
     }
-    // PATCH 3 - CMOS MATRIC RULE FOR SIGNUP
     if(!form.matric.toUpperCase().startsWith('CMOS')){
       return alert('ERROR: Only CMOS matric numbers allowed');
     }
@@ -38,7 +37,6 @@ export default function StudentLogin() {
       alert('Please fill Matric Number');
       return;
     }
-    // PATCH 3 - CMOS MATRIC RULE FOR LOGIN
     if(!loginForm.matric.toUpperCase().startsWith('CMOS')){
       return alert('ERROR: Only CMOS matric numbers allowed');
     }
@@ -58,7 +56,7 @@ export default function StudentLogin() {
 
   const pageStyle = { minHeight: '100vh', background: '#003366', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', fontFamily: 'Arial, sans-serif' };
   const cardStyle = { background: 'white', padding: '32px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' };
-  const inputStyle = { width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px', boxSizing: 'border-box' as 'border-box', fontSize: '14px' };
+  const inputStyle = { width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px', boxSizing: 'border-box', fontSize: '14px' };
   const btnStyle = { width: '100%', padding: '12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' };
   const linkStyle = { color: '#2563eb', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' };
 
@@ -92,6 +90,7 @@ export default function StudentLogin() {
             </p>
           </div>
         )}
+        <p style={{ marginTop: '24px', fontSize: '11px', textAlign: 'center', color: '#9ca3af' }}>Authorized and Verified by Meta EC</p>
       </div>
     </div>
   );
