@@ -15,6 +15,7 @@ export default function Landing() {
       color: 'white'
     }}>
 
+      {/* DESKTOP VIEW - LAPTOP >768px */}
       <div className="election-desktop" style={{
         display: 'flex',
         flexDirection: 'column',
@@ -34,7 +35,7 @@ export default function Landing() {
           margin: '0 0 8px 0',
           letterSpacing: '2px'
         }}>
-          ELECTION IS COMING SOON
+          NAMATL STUDENTS E-VOTING
         </h1>
 
         <hr style={{ width: '80px', border: '2px solid #FFD700', marginBottom: '24px' }} />
@@ -82,6 +83,7 @@ export default function Landing() {
         </div>
       </div>
 
+      {/* MOBILE VIEW - PHONE <768px */}
       <div className="election-mobile" style={{
         display: 'none',
         flexDirection: 'column',
@@ -97,7 +99,7 @@ export default function Landing() {
         />
 
         <h1 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 6px 0' }}>
-          ELECTION IS COMING SOON
+          NAMATL STUDENTS E-VOTING
         </h1>
 
         <hr style={{ width: '60px', border: '2px solid #FFD700', marginBottom: '16px' }} />
