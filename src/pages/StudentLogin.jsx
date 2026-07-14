@@ -13,6 +13,12 @@ export default function StudentLogin() {
     setTimeout(() => setMessage({ type: '', text: '' }), 5000);
   };
 
+  // Validate CMOS/XXXXX/XXXX format (e.g. CMOS/13865/2024)
+  const isValidMatric = (matric) => {
+    const regex = /^CMOS\/\d{5}\/\d{4}$/i;
+    return regex.test(matric.trim());
+  };
+
   const handleSignup = () => {
     if (!form.name || !form.matric || !form.level) {
       showMessage('error', 'Please fill all fields');
@@ -20,6 +26,10 @@ export default function StudentLogin() {
     }
     if (!form.matric.toUpperCase().startsWith('CMOS')) {
       showMessage('error', 'ERROR: Only CMOS matric numbers allowed');
+      return;
+    }
+    if (!isValidMatric(form.matric)) {
+      showMessage('error', 'ERROR: Matric must be format CMOS/XXXXX/XXXX (e.g. CMOS/13865/2024)');
       return;
     }
     try {
@@ -46,6 +56,10 @@ export default function StudentLogin() {
     }
     if (!loginForm.matric.toUpperCase().startsWith('CMOS')) {
       showMessage('error', 'ERROR: Only CMOS matric numbers allowed');
+      return;
+    }
+    if (!isValidMatric(loginForm.matric)) {
+      showMessage('error', 'ERROR: Matric must be format CMOS/XXXXX/XXXX (e.g. CMOS/13865/2024)');
       return;
     }
     try {
@@ -142,7 +156,7 @@ export default function StudentLogin() {
               style={inputStyle}
             />
             <input
-              placeholder="Matric Number (e.g. CMOS2023001)"
+              placeholder="Matric Number (e.g. CMOS/13865/2024)"
               value={form.matric}
               onChange={(e) => setForm({ ...form, matric: e.target.value })}
               style={inputStyle}
@@ -166,7 +180,7 @@ export default function StudentLogin() {
         ) : (
           <div>
             <input
-              placeholder="Matric Number"
+              placeholder="Matric Number (e.g. CMOS/13865/2024)"
               value={loginForm.matric}
               onChange={(e) => setLoginForm({ ...loginForm, matric: e.target.value })}
               style={{ ...inputStyle, marginBottom: '16px' }}
