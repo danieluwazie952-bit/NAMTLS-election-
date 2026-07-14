@@ -32,7 +32,6 @@ export default function AdminLogin() {
         <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} style={{width:'100%',padding:'12px',border:'1px solid #ccc',borderRadius:'4px',marginBottom:'16px',boxSizing:'border-box',fontSize:'14px'}} required />
         <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={{width:'100%',padding:'12px',border:'1px solid #ccc',borderRadius:'4px',marginBottom:'16px',boxSizing:'border-box',fontSize:'14px'}} required />
         <button type="submit" style={{width:'100%',padding:'12px',background:'#2563eb',color:'white',border:'none',borderRadius:'4px',fontWeight:'bold',cursor:'pointer',fontSize:'16px'}}>Login</button>
-        <p style={{ marginTop: '24px', fontSize: '11px', textAlign: 'center', color: '#9ca3af' }}>Authorized and Verified by Meta EC</p>
       </form>
     </div>
   );
