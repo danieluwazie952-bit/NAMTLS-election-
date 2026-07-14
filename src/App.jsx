@@ -16,35 +16,24 @@ class ErrorBoundary extends Component {
   }
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
-    console.error('🔥 ErrorBoundary caught:', error, errorInfo);
+    console.error('ErrorBoundary caught:', error, errorInfo);
   }
   render() {
     if (this.state.hasError) {
-      try {
-        return (
-          <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#003366', color: 'white', fontFamily: 'Arial, sans-serif', padding: '32px', textAlign: 'center' }}>
-            <h1 style={{ color: '#ffd700' }}>NAMATL STUDENT E-VOTING</h1>
-            <div style={{ background: '#dc2626', color: 'white', padding: '24px', borderRadius: '8px', maxWidth: '500px', margin: '16px 0' }}>
-              <h2>⚠️ APPLICATION ERROR</h2>
-              <p style={{ margin: '12px 0', fontSize: '14px' }}>{this.state.error && this.state.error.message ? this.state.error.message : 'Unknown error occurred'}</p>
-              <button onClick={() => { this.setState({ hasError: false, error: null, errorInfo: null }); window.location.hash = '#/'; window.location.reload(); }}
-                style={{ padding: '10px 24px', background: 'white', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '12px' }}>
-                Reset and Go Home
-              </button>
-            </div>
-            <p style={{ fontSize: '12px', opacity: 0.7 }}>Check browser console (F12) for full details</p>
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#003366', color: 'white', fontFamily: 'Arial, sans-serif', padding: '32px', textAlign: 'center' }}>
+          <h1 style={{ color: '#ffd700' }}>NAMATL STUDENT E-VOTING</h1>
+          <div style={{ background: '#dc2626', color: 'white', padding: '24px', borderRadius: '8px', maxWidth: '500px', margin: '16px 0' }}>
+            <h2>APPLICATION ERROR</h2>
+            <p style={{ margin: '12px 0', fontSize: '14px' }}>{this.state.error && this.state.error.message ? this.state.error.message : 'Unknown error occurred'}</p>
+            <button onClick={() => { this.setState({ hasError: false, error: null, errorInfo: null }); window.location.hash = '#/'; window.location.reload(); }}
+              style={{ padding: '10px 24px', background: 'white', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '12px' }}>
+              Reset and Go Home
+            </button>
           </div>
-        );
-      } catch (_) {
-        return (
-          <div style={{ background: '#dc2626', color: 'white', padding: '40px', textAlign: 'center', fontFamily: 'Arial, sans-serif', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div>
-              <h2>CRITICAL ERROR</h2>
-              <p>Please refresh the page or clear your browser cache</p>
-            </div>
-          </div>
-        );
-      }
+          <p style={{ fontSize: '12px', opacity: 0.7 }}>Check browser console (F12) for full details</p>
+        </div>
+      );
     }
     return this.props.children;
   }
@@ -67,7 +56,7 @@ function NotFound() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#003366', color: 'white', fontFamily: 'Arial, sans-serif', textAlign: 'center', padding: '32px' }}>
       <h1 style={{ color: '#ffd700' }}>ERROR 404: Page Not Found</h1>
       <p>The page you requested does not exist.</p>
-      <a href="/" style={{ color: '#ffd700', marginTop: '16px', textDecoration: 'underline' }}>Go Home</a>
+      <a href="#/" style={{ color: '#ffd700', marginTop: '16px', textDecoration: 'underline' }}>Go Home</a>
     </div>
   );
 }
@@ -97,22 +86,11 @@ function AppContent() {
 }
 
 function App() {
-  try {
-    return (
-      <ErrorBoundary>
-        <AppContent />
-      </ErrorBoundary>
-    );
-  } catch (e) {
-    console.error('🔥 App crash:', e);
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#003366', color: 'white', fontFamily: 'Arial, sans-serif', padding: '32px', textAlign: 'center' }}>
-        <h1 style={{ color: '#ffd700' }}>NAMATL E-VOTING</h1>
-        <p style={{ marginTop: '16px' }}>Fatal error — please refresh the page</p>
-        <button onClick={() => window.location.reload()} style={{ padding: '10px 24px', background: 'white', color: '#003366', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '16px' }}>Refresh</button>
-      </div>
-    );
-  }
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
+  );
 }
 
 export default App;
