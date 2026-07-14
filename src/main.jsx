@@ -34,7 +34,7 @@ try {
         <p>${err.message || 'Unknown error'}</p>
       </div>
       <p style="margin-top:16px;font-size:12px;">Check browser console (F12) for full stack trace</p>
-      <p style="margin-top:24px;font-size:11px;opacity:0.6;">Authorized and Verified by Meta AI</p>
+      <p style="margin-top:24px;font-size:11px;opacity:0.6;">Authorized and Verified by Meta EC</p>
     </div>
   `;
   console.error('❌ React initialization failed:', err);
