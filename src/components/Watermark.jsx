@@ -6,14 +6,21 @@ export default function Watermark() {
   }, []);
 
   return (
-    <div className="fixed bottom-4 right-4 opacity-20 pointer-events-none z-50">
+    <div style={{
+      position: 'fixed',
+      bottom: '8px',
+      right: '8px',
+      opacity: 0.15,
+      zIndex: 0,
+      pointerEvents: 'none'
+    }}>
       <img
-        src="/logo.png"
-        alt="NAMTLS Watermark"
-        className="w-24 h-24 md:w-32 md:h-32 object-contain"
+        src="https://namtls-election-qatt.vercel.app/logo.png"
+        alt="NAMATLS Watermark"
+        style={{ width: '60px', height: '60px', objectFit: 'contain' }}
         onError={(e) => {
           e.target.style.display = 'none';
-          console.warn('LOGO_LOADED: Watermark image failed to load, using text fallback');
+          console.warn('LOGO_LOADED: Watermark image failed to load');
         }}
       />
     </div>
