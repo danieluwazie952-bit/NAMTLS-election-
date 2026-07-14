@@ -5,7 +5,6 @@ export default function Landing() {
     <div style={{ minHeight: '100vh', background: '#003366', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif', color: 'white', padding: '32px', textAlign: 'center' }}>
       <img src="https://namtls-election-qatt.vercel.app/logo.png" alt="NAMTLS Logo" style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: '24px' }} onError={(e) => { e.target.style.display = 'none'; }} />
       
-      {/* PATCH 4 - RESPONSIVE TEXT */}
       <h1 className="election-text">
         <span className="desktop">ELECTION IS COMING SOON</span>
         <span className="mobile">ELECTION IS COMING<br/>SOON</span>
@@ -24,6 +23,10 @@ export default function Landing() {
           Admin Login
         </Link>
       </div>
+      
+      <footer style={{ marginTop: '48px', fontSize: '11px', opacity: '0.6' }}>
+        <p>Authorized and Verified by EC</p>
+      </footer>
     </div>
   );
 }
