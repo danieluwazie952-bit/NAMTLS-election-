@@ -2,148 +2,98 @@ import { Link } from 'react-router-dom';
 
 export default function Landing() {
   return (
-    <div className="landing-container" style={{
-      minHeight: '100vh',
-      background: '#003366',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      textAlign: 'center',
-      padding: '32px',
-      fontFamily: 'Arial, sans-serif',
-      color: 'white'
-    }}>
+    <>
 
       {/* DESKTOP VIEW - LAPTOP >768px */}
       <div className="election-desktop" style={{
+        minHeight: '100vh',
+        background: '#003366',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center'
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        fontFamily: 'Arial, sans-serif',
+        textAlign: 'center',
+        padding: '40px'
       }}>
         <img
           src="https://namtls-election-qatt.vercel.app/logo.png"
           alt="NAMATLS Logo"
-          className="landing-logo"
-          style={{ width: '120px', height: '120px', marginBottom: '20px', objectFit: 'contain' }}
+          style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', marginBottom: '20px' }}
           onError={(e) => { e.target.style.display = 'none'; }}
         />
-
-        <h1 style={{
-          fontSize: '36px',
-          fontWeight: 'bold',
-          margin: '0 0 8px 0',
-          letterSpacing: '2px'
-        }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
           NAMATL STUDENTS E-VOTING
         </h1>
-
-        <hr style={{ width: '80px', border: '2px solid #FFD700', marginBottom: '24px' }} />
-
-        <h2 style={{
-          fontSize: '18px',
-          fontWeight: 'normal',
-          color: '#ccc',
-          margin: '0 0 32px 0'
-        }}>
+        <hr style={{ width: '60%', border: 'none', borderTop: '2px solid #FFD700', margin: '12px auto' }} />
+        <h2 style={{ fontSize: '16px', fontWeight: 'normal', color: '#FFD700', margin: '0 0 32px 0' }}>
           Official Student Union Election Portal
         </h2>
 
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Link
-            to="/student-login"
-            className="landing-btn"
-            style={{
-              padding: '12px 32px',
-              background: '#2563eb',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '6px',
-              fontWeight: 'bold',
-              fontSize: '16px'
-            }}
-          >
-            Student Portal
-          </Link>
-          <Link
-            to="/admin"
-            className="landing-btn"
-            style={{
-              padding: '12px 32px',
-              background: '#FFD700',
-              color: '#003366',
-              textDecoration: 'none',
-              borderRadius: '6px',
-              fontWeight: 'bold',
-              fontSize: '16px'
-            }}
-          >
-            Admin Login
-          </Link>
-        </div>
+        <Link
+          to="/student-login"
+          style={{
+            display: 'inline-block',
+            padding: '14px 40px',
+            background: '#2563eb',
+            color: 'white',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            textDecoration: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          Student Portal
+        </Link>
       </div>
 
       {/* MOBILE VIEW - PHONE <768px */}
       <div className="election-mobile" style={{
-        display: 'none',
+        minHeight: '100vh',
+        background: '#003366',
+        display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        width: '100%'
+        justifyContent: 'center',
+        color: 'white',
+        fontFamily: 'Arial, sans-serif',
+        textAlign: 'center',
+        padding: '24px'
       }}>
         <img
           src="https://namtls-election-qatt.vercel.app/logo.png"
           alt="NAMATLS Logo"
-          className="landing-logo"
-          style={{ width: '80px', height: '80px', marginBottom: '16px', objectFit: 'contain' }}
+          style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', marginBottom: '16px' }}
           onError={(e) => { e.target.style.display = 'none'; }}
         />
-
         <h1 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 6px 0' }}>
           NAMATL STUDENTS E-VOTING
         </h1>
-
-        <hr style={{ width: '60px', border: '2px solid #FFD700', marginBottom: '16px' }} />
-
-        <p style={{ fontSize: '14px', color: '#ccc', marginBottom: '24px' }}>
+        <hr style={{ width: '80%', border: 'none', borderTop: '2px solid #FFD700', margin: '10px auto' }} />
+        <p style={{ fontSize: '14px', color: '#FFD700', margin: '0 0 24px 0' }}>
           Official Student Union Election Portal
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '280px' }}>
-          <Link
-            to="/student-login"
-            className="landing-btn"
-            style={{
-              padding: '10px 20px',
-              background: '#2563eb',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '6px',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              textAlign: 'center'
-            }}
-          >
-            Student Portal
-          </Link>
-          <Link
-            to="/admin"
-            className="landing-btn"
-            style={{
-              padding: '10px 20px',
-              background: '#FFD700',
-              color: '#003366',
-              textDecoration: 'none',
-              borderRadius: '6px',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              textAlign: 'center'
-            }}
-          >
-            Admin Login
-          </Link>
-        </div>
+        <Link
+          to="/student-login"
+          style={{
+            display: 'inline-block',
+            padding: '12px 32px',
+            background: '#2563eb',
+            color: 'white',
+            borderRadius: '8px',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            textDecoration: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          Student Portal
+        </Link>
       </div>
 
-    </div>
+    </>
   );
 }
