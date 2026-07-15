@@ -172,7 +172,6 @@ export default function AdminDashboard() {
   };
 
   const sortedByVotes = [...candidates].sort((a, b) => (b.votes || 0) - (a.votes || 0));
-  const winner = sortedByVotes[0];
   const phase = getElectionPhase();
 
   const inputStyle = { width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px', boxSizing: 'border-box' };
@@ -193,6 +192,7 @@ export default function AdminDashboard() {
       <div style={{ minHeight: '100vh', background: '#003366', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif', padding: '32px', textAlign: 'center' }}>
         <h2 style={{ color: '#dc2626' }}>ERROR</h2>
         <p>{error}</p>
+        <button onClick={loadData} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '12px' }}>Retry</button>
       </div>
     );
   }
@@ -224,9 +224,7 @@ export default function AdminDashboard() {
               <button onClick={toggleElection} style={{ padding: '10px 20px', background: settings.isActive ? '#dc2626' : '#16a34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
                 {settings.isActive ? 'Deactivate Election' : 'Activate Election'}
               </button>
-              {settings.isActive && (
-                <button onClick={deleteAllElectionData} style={{ padding: '10px 20px', background: '#6b7280', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Delete All Data</button>
-              )}
+              <button onClick={deleteAllElectionData} style={{ padding: '10px 20px', background: '#6b7280', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Delete All Data</button>
             </div>
             <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '4px', fontSize: '14px' }}>
               <p><strong>Status:</strong> <span style={{ color: phase.color }}>{phase.label}</span></p>
@@ -371,7 +369,9 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              <p style={{ textAlign: 'center', marginTop: '24px' }}><a href="#/" style={{ color: '#2563eb' }}>Go back to homepage</a></p>
+              <p style={{ textAlign: 'center', marginTop: '24px' }}>
+                <a href="#/" style={{ color: '#2563eb' }}>Go back to homepage</a>
+              </p>
             </div>
           </div>
         )}
