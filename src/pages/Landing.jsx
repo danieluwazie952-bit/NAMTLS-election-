@@ -15,7 +15,7 @@ export default function Landing() {
       padding: '40px',
       position: 'relative'
     }}>
-      {/* + Icon Top-Left for Admin Access - ONLY way to reach admin */}
+      {/* + Icon Top-Left for Admin Access */}
       <a
         href="#/admin-login"
         style={{
@@ -87,7 +87,7 @@ export default function Landing() {
         Official Student Union Election Portal
       </h2>
 
-      {/* SINGLE Student Portal Button - ONLY ONE */}
+      {/* SINGLE Student Portal Button */}
       <Link
         to="/student-login"
         style={{
@@ -108,7 +108,7 @@ export default function Landing() {
         Student Portal
       </Link>
 
-      {/* Responsive override for mobile */}
+      {/* Responsive override */}
       <style>{`
         @media (max-width: 768px) {
           div[style*="padding: 40px"] {
