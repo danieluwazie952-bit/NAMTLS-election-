@@ -24,19 +24,19 @@ class ErrorBoundary extends Component {
         <div style={{
           minHeight: '100vh',
           background: '#003366',
+          color: 'white',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'white',
           fontFamily: 'Arial, sans-serif',
-          padding: '32px',
-          textAlign: 'center'
+          textAlign: 'center',
+          padding: '40px'
         }}>
-          <h1 style={{ fontSize: '28px', marginBottom: '16px' }}>NAMATL STUDENT E-VOTING</h1>
-          <hr style={{ width: '80px', border: '2px solid #FFD700', marginBottom: '24px' }} />
-          <h2 style={{ color: '#ef4444' }}>APPLICATION ERROR</h2>
-          <p style={{ margin: '16px 0', color: '#ccc' }}>
+          <h1 style={{ fontSize: '24px', margin: '0 0 8px 0' }}>NAMATL STUDENT E-VOTING</h1>
+          <hr style={{ width: '60%', border: 'none', borderTop: '2px solid #FFD700', margin: '12px auto' }} />
+          <h2 style={{ color: '#dc2626' }}>APPLICATION ERROR</h2>
+          <p style={{ color: '#ccc', margin: '12px 0' }}>
             {this.state.error && this.state.error.message ? this.state.error.message : 'Unknown error occurred'}
           </p>
           <button
@@ -58,7 +58,7 @@ class ErrorBoundary extends Component {
           >
             Reset and Go Home
           </button>
-          <p style={{ marginTop: '16px', fontSize: '11px', color: '#666' }}>
+          <p style={{ fontSize: '12px', color: '#888', marginTop: '24px' }}>
             Check browser console (F12) for full details
           </p>
         </div>
@@ -73,17 +73,26 @@ function LoadingScreen() {
     <div style={{
       minHeight: '100vh',
       background: '#003366',
+      color: 'white',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      color: 'white',
       fontFamily: 'Arial, sans-serif',
-      padding: '32px',
-      textAlign: 'center'
+      textAlign: 'center',
+      padding: '40px'
     }}>
       <div>
-        <h1 style={{ fontSize: '36px', marginBottom: '16px' }}>NAMATL STUDENT E-VOTING</h1>
-        <hr style={{ width: '80px', border: '2px solid #FFD700', margin: '0 auto 24px auto' }} />
+        <h1 style={{ fontSize: '24px', margin: '0 0 8px 0' }}>NAMATL STUDENT E-VOTING</h1>
+        <hr style={{ width: '60%', border: 'none', borderTop: '2px solid #FFD700', margin: '12px auto' }} />
+        <div style={{
+          border: '4px solid #FFD700',
+          borderTop: '4px solid transparent',
+          borderRadius: '50%',
+          width: '40px',
+          height: '40px',
+          animation: 'spin 1s linear infinite',
+          margin: '20px auto'
+        }}></div>
       </div>
     </div>
   );
@@ -94,26 +103,26 @@ function NotFound() {
     <div style={{
       minHeight: '100vh',
       background: '#003366',
+      color: 'white',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      color: 'white',
       fontFamily: 'Arial, sans-serif',
-      padding: '32px',
-      textAlign: 'center'
+      textAlign: 'center',
+      padding: '40px'
     }}>
-      <h1 style={{ color: '#ef4444', marginBottom: '12px' }}>ERROR 404: Page Not Found</h1>
-      <p style={{ marginBottom: '20px', color: '#ccc' }}>The page you requested does not exist.</p>
+      <h1 style={{ fontSize: '28px', margin: '0 0 12px 0' }}>ERROR 404: Page Not Found</h1>
+      <p style={{ color: '#ccc', margin: '0 0 24px 0' }}>The page you requested does not exist.</p>
       <a
         href="#/"
         style={{
           padding: '10px 24px',
           background: '#2563eb',
           color: 'white',
-          textDecoration: 'none',
           borderRadius: '4px',
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          textDecoration: 'none'
         }}
       >
         Go Home
@@ -137,7 +146,8 @@ function AppContent() {
       <Route path="/" element={<Landing />} />
       <Route path="/student-login" element={<StudentLogin />} />
       <Route path="/student" element={<StudentDashboard />} />
-      <Route path="/admin" element={<AdminLogin />} />
+      {/* Admin login is on a HIDDEN route - no public link to it */}
+      <Route path="/admin-login" element={<AdminLogin />} />
       <Route path="/admin-dashboard" element={<AdminDashboard />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
