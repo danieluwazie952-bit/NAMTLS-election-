@@ -2,98 +2,97 @@ import { Link } from 'react-router-dom';
 
 export default function Landing() {
   return (
-    <>
+    <div style={{
+      minHeight: '100vh',
+      background: '#003366',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white',
+      fontFamily: 'Arial, sans-serif',
+      textAlign: 'center',
+      padding: '40px',
+      position: 'relative'
+    }}>
+      {/* + Icon for Admin - Top Left Corner - Hidden Admin Access */}
+      <a
+        href="#/admin-login"
+        style={{
+          position: 'fixed',
+          top: '12px',
+          left: '12px',
+          width: '36px',
+          height: '36px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(255,255,255,0.15)',
+          color: 'rgba(255,255,255,0.5)',
+          borderRadius: '50%',
+          fontSize: '22px',
+          fontWeight: 'bold',
+          textDecoration: 'none',
+          cursor: 'pointer',
+          zIndex: '9999',
+          border: 'none',
+          transition: 'all 0.2s',
+          userSelect: 'none'
+        }}
+        title="Admin"
+      >+</a>
 
-      {/* DESKTOP VIEW - LAPTOP >768px */}
-      <div className="election-desktop" style={{
-        minHeight: '100vh',
-        background: '#003366',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'white',
-        fontFamily: 'Arial, sans-serif',
-        textAlign: 'center',
-        padding: '40px'
-      }}>
-        <img
-          src="https://namtls-election-qatt.vercel.app/logo.png"
-          alt="NAMATLS Logo"
-          style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', marginBottom: '20px' }}
-          onError={(e) => { e.target.style.display = 'none'; }}
-        />
-        <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
-          NAMATL STUDENTS E-VOTING
-        </h1>
-        <hr style={{ width: '60%', border: 'none', borderTop: '2px solid #FFD700', margin: '12px auto' }} />
-        <h2 style={{ fontSize: '16px', fontWeight: 'normal', color: '#FFD700', margin: '0 0 32px 0' }}>
-          Official Student Union Election Portal
-        </h2>
+      {/* Logo */}
+      <img
+        src="https://namtls-election-qatt.vercel.app/logo.png"
+        alt="NAMATLS Logo"
+        style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', marginBottom: '20px' }}
+        onError={(e) => { e.target.style.display = 'none'; }}
+      />
 
-        <Link
-          to="/student-login"
-          style={{
-            display: 'inline-block',
-            padding: '14px 40px',
-            background: '#2563eb',
-            color: 'white',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            fontSize: '16px',
-            textDecoration: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          Student Portal
-        </Link>
-      </div>
+      {/* Title */}
+      <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
+        NAMATL STUDENTS E-VOTING
+      </h1>
 
-      {/* MOBILE VIEW - PHONE <768px */}
-      <div className="election-mobile" style={{
-        minHeight: '100vh',
-        background: '#003366',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'white',
-        fontFamily: 'Arial, sans-serif',
-        textAlign: 'center',
-        padding: '24px'
-      }}>
-        <img
-          src="https://namtls-election-qatt.vercel.app/logo.png"
-          alt="NAMATLS Logo"
-          style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', marginBottom: '16px' }}
-          onError={(e) => { e.target.style.display = 'none'; }}
-        />
-        <h1 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 6px 0' }}>
-          NAMATL STUDENTS E-VOTING
-        </h1>
-        <hr style={{ width: '80%', border: 'none', borderTop: '2px solid #FFD700', margin: '10px auto' }} />
-        <p style={{ fontSize: '14px', color: '#FFD700', margin: '0 0 24px 0' }}>
-          Official Student Union Election Portal
-        </p>
+      {/* Divider */}
+      <hr style={{ width: '60%', border: 'none', borderTop: '2px solid #FFD700', margin: '12px auto' }} />
 
-        <Link
-          to="/student-login"
-          style={{
-            display: 'inline-block',
-            padding: '12px 32px',
-            background: '#2563eb',
-            color: 'white',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            fontSize: '14px',
-            textDecoration: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          Student Portal
-        </Link>
-      </div>
+      {/* Subtitle */}
+      <h2 style={{ fontSize: '16px', fontWeight: 'normal', color: '#FFD700', margin: '0 0 32px 0' }}>
+        Official Student Union Election Portal
+      </h2>
 
-    </>
+      {/* Student Portal Button - ONLY ONE */}
+      <Link
+        to="/student-login"
+        style={{
+          display: 'inline-block',
+          padding: '14px 40px',
+          background: '#2563eb',
+          color: 'white',
+          borderRadius: '8px',
+          fontWeight: 'bold',
+          fontSize: '16px',
+          textDecoration: 'none',
+          cursor: 'pointer',
+          transition: 'background 0.2s'
+        }}
+        onMouseEnter={(e) => e.target.style.background = '#1d4ed8'}
+        onMouseLeave={(e) => e.target.style.background = '#2563eb'}
+      >
+        Student Portal
+      </Link>
+
+      {/* Mobile responsive override */}
+      <style>{`
+        @media (max-width: 768px) {
+          /* Force single column center on mobile - no duplicate */
+          .landing-single {
+            padding: 24px !important;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
