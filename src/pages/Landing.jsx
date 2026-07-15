@@ -15,7 +15,7 @@ export default function Landing() {
       padding: '40px',
       position: 'relative'
     }}>
-      {/* + Icon for Admin - Top Left Corner - Hidden Admin Access */}
+      {/* + Icon Top-Left for Admin Access - ONLY way to reach admin */}
       <a
         href="#/admin-login"
         style={{
@@ -34,36 +34,60 @@ export default function Landing() {
           fontWeight: 'bold',
           textDecoration: 'none',
           cursor: 'pointer',
-          zIndex: '9999',
+          zIndex: 9999,
           border: 'none',
           transition: 'all 0.2s',
           userSelect: 'none'
         }}
-        title="Admin"
-      >+</a>
+        title="Admin Access"
+        onMouseEnter={e => { e.target.style.background = 'rgba(255,255,255,0.3)'; e.target.style.color = 'rgba(255,255,255,0.8)'; }}
+        onMouseLeave={e => { e.target.style.background = 'rgba(255,255,255,0.15)'; e.target.style.color = 'rgba(255,255,255,0.5)'; }}
+      >
+        +
+      </a>
 
       {/* Logo */}
       <img
         src="https://namtls-election-qatt.vercel.app/logo.png"
         alt="NAMATLS Logo"
-        style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', marginBottom: '20px' }}
-        onError={(e) => { e.target.style.display = 'none'; }}
+        style={{
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          objectFit: 'cover',
+          marginBottom: '20px'
+        }}
+        onError={e => { e.target.style.display = 'none'; }}
       />
 
       {/* Title */}
-      <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
+      <h1 style={{
+        fontSize: '28px',
+        fontWeight: 'bold',
+        margin: '0 0 8px 0'
+      }}>
         NAMATL STUDENTS E-VOTING
       </h1>
 
       {/* Divider */}
-      <hr style={{ width: '60%', border: 'none', borderTop: '2px solid #FFD700', margin: '12px auto' }} />
+      <hr style={{
+        width: '60%',
+        border: 'none',
+        borderTop: '2px solid #FFD700',
+        margin: '12px auto'
+      }} />
 
       {/* Subtitle */}
-      <h2 style={{ fontSize: '16px', fontWeight: 'normal', color: '#FFD700', margin: '0 0 32px 0' }}>
+      <h2 style={{
+        fontSize: '16px',
+        fontWeight: 'normal',
+        color: '#FFD700',
+        margin: '0 0 32px 0'
+      }}>
         Official Student Union Election Portal
       </h2>
 
-      {/* Student Portal Button - ONLY ONE */}
+      {/* SINGLE Student Portal Button - ONLY ONE */}
       <Link
         to="/student-login"
         style={{
@@ -78,17 +102,16 @@ export default function Landing() {
           cursor: 'pointer',
           transition: 'background 0.2s'
         }}
-        onMouseEnter={(e) => e.target.style.background = '#1d4ed8'}
-        onMouseLeave={(e) => e.target.style.background = '#2563eb'}
+        onMouseEnter={e => e.target.style.background = '#1d4ed8'}
+        onMouseLeave={e => e.target.style.background = '#2563eb'}
       >
         Student Portal
       </Link>
 
-      {/* Mobile responsive override */}
+      {/* Responsive override for mobile */}
       <style>{`
         @media (max-width: 768px) {
-          /* Force single column center on mobile - no duplicate */
-          .landing-single {
+          div[style*="padding: 40px"] {
             padding: 24px !important;
           }
         }
