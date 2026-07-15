@@ -7,14 +7,13 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 // ===== CONFIGURABLE CANDIDATE LIMIT =====
 // Set to 0 or false for NO LIMIT (Infinity).
 // Set to any positive number (e.g., 5) to enforce a limit.
-const MAX_CANDIDATES = 0; // 0 = no limit, or set to 5, 10, etc.
+const MAX_CANDIDATES = 5; // NOW SET TO 5
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState('settings');
   const [candidates, setCandidates] = useState([]);
-  // ===== UPDATED: startDate, startTime, endDate, endTime instead of date, time =====
   const [settings, setSettings] = useState({
     year: '',
     startDate: '',
@@ -65,8 +64,9 @@ export default function AdminDashboard() {
   const getCandidateLimitMessage = () => {
     if (MAX_CANDIDATES === 0 || MAX_CANDIDATES === false) return '';
     const remaining = MAX_CANDIDATES - candidates.length;
-    if (remaining <= 0) return `Maximum of ${MAX_CANDIDATES} candidates reached. Remove a candidate first.`;
-    return `You can add ${remaining} more candidate(s). Maximum: ${MAX_CANDIDATES}`;
+    if (remaining <= 0) return `Maximum of ${MAX_CANDIDATES} candidates reached. You cannot add more. Please remove one first.`;
+    if (remaining === 1) return `Only 1 slot remaining. Maximum: ${MAX_CANDIDATES} candidates.`;
+    return `${remaining} slots remaining out of ${MAX_CANDIDATES} maximum candidates.`;
   };
 
   // ===== SAVE SETTINGS =====
@@ -181,7 +181,12 @@ export default function AdminDashboard() {
       setPhoto(null);
       setPhotoPreview('');
       loadData();
-      alert('Candidate Added Successfully!');
+      const remaining = MAX_CANDIDATES - candidates.length - 1;
+      if (MAX_CANDIDATES > 0) {
+        alert(`Candidate Added Successfully! ${remaining > 0 ? `${remaining} slot(s) remaining.` : 'Max candidates reached.'}`);
+      } else {
+        alert('Candidate Added Successfully!');
+      }
     } catch (e) {
       alert('FAILED TO ADD: ' + e.message);
     }
@@ -320,11 +325,14 @@ export default function AdminDashboard() {
     <div style={{ minHeight: '100vh', background: '#f0f2f5', fontFamily: 'Arial, sans-serif' }}>
       <style>{`
         @media print {
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
           .no-print { display: none !important; }
-          .print-only { display: block !important; }
+          #result-print-area { display: block !important; padding: 20px 40px !important; background: white !important; box-shadow: none !important; border-radius: 0 !important; }
+          #result-print-area table { font-size: 12px !important; }
+          #result-print-area table th { background-color: #003366 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          #result-print-area table td { border: 1px solid #999 !important; }
+          @page { margin: 15mm; }
         }
-        .print-only { display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       `}</style>
 
@@ -419,11 +427,12 @@ export default function AdminDashboard() {
               <strong>Candidate Limit:</strong>{' '}
               {MAX_CANDIDATES === 0 || MAX_CANDIDATES === false
                 ? <span>No limit (unlimited candidates)</span>
-                : <span>Maximum {MAX_CANDIDATES} candidates</span>
+                : <span>Maximum of {MAX_CANDIDATES} candidates</span>
               }
               <br />
               <span style={{ fontSize: '12px', color: '#666' }}>
-                Current candidates: {candidates.length}{MAX_CANDIDATES > 0 && ` / ${MAX_CANDIDATES}`}
+                Current candidates: {candidates.length}{MAX_CANDIDATES > 0 && ` out of ${MAX_CANDIDATES}`}
+                {MAX_CANDIDATES > 0 && !isCandidateLimitReached() && ` (${MAX_CANDIDATES - candidates.length} slot(s) left)`}
               </span>
             </div>
           </div>
@@ -486,7 +495,7 @@ export default function AdminDashboard() {
               background: isCandidateLimitReached() ? '#9ca3af' : '#2563eb',
               color: 'white', border: 'none', borderRadius: '4px',
               fontWeight: 'bold', cursor: isCandidateLimitReached() ? 'not-allowed' : 'pointer'
-            }}>{isCandidateLimitReached() ? 'Max Candidates Reached' : 'Add Candidate'}</button>
+            }}>{isCandidateLimitReached() ? 'Max Candidates Reached (5)' : 'Add Candidate'}</button>
 
             <div style={{ marginTop: '24px' }}>
               <h3 style={{ color: '#003366', margin: '0 0 12px 0' }}>All Candidates ({candidates.length})</h3>
@@ -523,7 +532,8 @@ export default function AdminDashboard() {
 
       {/* ===== TAB: RESULTS ===== */}
       {tab === 'results' && (
-        <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
+        <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }} id="result-page-wrapper">
+          {/* Admin controls - hidden from print via class */}
           <div className="no-print" style={{
             background: 'white', padding: '16px', borderRadius: '8px',
             boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px',
@@ -539,29 +549,47 @@ export default function AdminDashboard() {
             }}>Print / Export PDF</button>
           </div>
 
+          {/* ===== PRINT RESULT AREA ===== */}
           <div id="result-print-area" style={{
-            background: 'white', padding: '40px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            background: 'white',
+            padding: '40px',
+            borderRadius: '8px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
           }}>
+            {/* Title */}
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <h1 style={{ fontSize: '22px', color: '#003366', margin: '0 0 4px 0' }}>NAMATL STUDENT E-VOTING</h1>
+              <h1 style={{ fontSize: '22px', color: '#003366', margin: '0 0 4px 0' }}>
+                NAMATL STUDENT E-VOTING
+              </h1>
               <hr style={{ width: '80px', border: 'none', borderTop: '3px solid #FFD700', margin: '8px auto' }} />
               {settings.year && <p style={{ fontSize: '14px', color: '#666', margin: '0' }}>{settings.year} Election</p>}
             </div>
 
+            {/* Official Results */}
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <h2 style={{
-                fontSize: '20px', color: '#003366', fontWeight: 'bold', margin: '0 0 8px 0',
-                letterSpacing: '2px', textTransform: 'uppercase',
-                borderBottom: '2px solid #003366', paddingBottom: '8px', display: 'inline-block'
-              }}>OFFICIAL ELECTION RESULTS</h2>
+                fontSize: '20px',
+                color: '#003366',
+                fontWeight: 'bold',
+                margin: '0 0 8px 0',
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+                borderBottom: '2px solid #003366',
+                paddingBottom: '8px',
+                display: 'inline-block'
+              }}>
+                OFFICIAL ELECTION RESULTS
+              </h2>
             </div>
 
+            {/* Content */}
             {candidates.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px', color: '#666' }}>
                 <p style={{ fontSize: '18px', fontStyle: 'italic' }}>No candidates to display results for</p>
               </div>
             ) : (
               <>
+                {/* Result Table */}
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '32px', fontSize: '14px' }}>
                   <thead>
                     <tr style={{ background: '#003366', color: 'white' }}>
@@ -591,10 +619,15 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
 
+                {/* Winner */}
                 {winner && (
                   <div style={{
-                    textAlign: 'center', padding: '16px', background: '#fefce8',
-                    border: '2px solid #16a34a', borderRadius: '8px', marginBottom: '32px'
+                    textAlign: 'center',
+                    padding: '16px',
+                    background: '#fefce8',
+                    border: '2px solid #16a34a',
+                    borderRadius: '8px',
+                    marginBottom: '32px'
                   }}>
                     <p style={{ fontSize: '16px', margin: '0', color: '#003366' }}>
                       <strong>Winner:</strong>{' '}
@@ -604,19 +637,34 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
+                {/* Approval Box */}
                 <div style={{
-                  marginTop: '40px', borderTop: '2px solid #003366', paddingTop: '24px', textAlign: 'right'
+                  marginTop: '40px',
+                  borderTop: '2px solid #003366',
+                  paddingTop: '24px',
+                  textAlign: 'right'
                 }}>
                   <div style={{
-                    border: '2px solid #003366', padding: '16px 24px', borderRadius: '4px',
-                    display: 'inline-block', textAlign: 'center', minWidth: '300px', maxWidth: '100%'
+                    border: '2px solid #003366',
+                    padding: '16px 24px',
+                    borderRadius: '4px',
+                    display: 'inline-block',
+                    textAlign: 'center',
+                    minWidth: '300px',
+                    maxWidth: '100%'
                   }}>
-                    <p style={{ fontWeight: 'bold', color: '#003366', margin: '0 0 4px 0', fontSize: '14px' }}>Approved by the Electoral Chairman</p>
+                    <p style={{ fontWeight: 'bold', color: '#003366', margin: '0 0 4px 0', fontSize: '14px' }}>
+                      Approved by the Electoral Chairman
+                    </p>
                     <hr style={{ width: '200px', margin: '8px auto', border: '1px solid #003366' }} />
-                    <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>Electoral Chairman Signature</p>
+                    <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>
+                      Electoral Chairman Signature
+                    </p>
                     <div style={{ marginTop: '24px' }}>
                       <hr style={{ width: '200px', margin: '8px auto', border: '1px solid #003366' }} />
-                      <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>Electoral Secretary Signature</p>
+                      <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>
+                        Electoral Secretary Signature
+                      </p>
                     </div>
                   </div>
                 </div>
