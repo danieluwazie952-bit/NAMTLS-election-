@@ -56,7 +56,7 @@ export default function AdminDashboard() {
   const addCandidate = async () => {
     if (!name || !position) { alert('Please fill Name and Position'); return; }
     if (isPositionFull(position)) {
-      alert('ERROR: Maximum ' + MAX_PER_POSITION + ' candidates allowed for position "' + position + '". This position already has ' + getCountForPosition(position) + ' candidates.');
+      alert('Maximum ' + MAX_PER_POSITION + ' candidates allowed for position "' + position + '". Already has ' + getCountForPosition(position) + '.');
       return;
     }
     try {
@@ -76,14 +76,9 @@ export default function AdminDashboard() {
   };
 
   const deleteCandidate = async (id, photoURL) => {
-    if (!window.confirm('Delete this candidate? This cannot be undone.')) return;
+    if (!window.confirm('Delete this candidate?')) return;
     try {
-      if (photoURL) {
-        try {
-          const photoRef = ref(storage, photoURL);
-          await deleteObject(photoRef);
-        } catch (_) {}
-      }
+      if (photoURL) { try { await deleteObject(ref(storage, photoURL)); } catch (_) {} }
       await deleteDoc(doc(db, 'candidates', id));
       loadData();
     } catch (e) {
@@ -93,68 +88,48 @@ export default function AdminDashboard() {
 
   const saveSettings = async () => {
     if (!settings.year || !settings.startDate || !settings.startTime || !settings.endDate || !settings.endTime) {
-      alert('Please fill all fields');
-      return;
+      alert('Please fill all fields'); return;
     }
     try {
       await setDoc(doc(db, 'settings', 'main'), { ...settings, isActive: true });
       alert('Election Settings Saved!');
       loadData();
-    } catch (e) {
-      alert('FAILED TO SAVE: ' + e.message);
-    }
+    } catch (e) { alert('FAILED TO SAVE: ' + e.message); }
   };
 
   const toggleElection = async () => {
     try {
       await setDoc(doc(db, 'settings', 'main'), { ...settings, isActive: !settings.isActive });
       loadData();
-    } catch (e) {
-      alert('FAILED: ' + e.message);
-    }
+    } catch (e) { alert('FAILED: ' + e.message); }
   };
 
   const deleteAllElectionData = async () => {
-    if (!window.confirm('Delete ALL election data? This cannot be undone!')) return;
+    if (!window.confirm('Delete ALL election data?')) return;
     try {
       const candSnap = await getDocs(collection(db, 'candidates'));
       for (const d of candSnap.docs) {
-        const data = d.data();
-        if (data.photoURL) {
-          try { await deleteObject(ref(storage, data.photoURL)); } catch (_) {}
-        }
+        if (d.data().photoURL) { try { await deleteObject(ref(storage, d.data().photoURL)); } catch (_) {} }
         await deleteDoc(doc(db, 'candidates', d.id));
       }
       await setDoc(doc(db, 'settings', 'main'), { year: '', startDate: '', startTime: '', endDate: '', endTime: '', isActive: false });
       loadData();
       alert('All election data cleared.');
-    } catch (e) {
-      alert('FAILED: ' + e.message);
-    }
+    } catch (e) { alert('FAILED: ' + e.message); }
   };
 
   const clearAllVotes = async () => {
-    if (!window.confirm('Clear ALL votes? This cannot be undone!')) return;
+    if (!window.confirm('Clear ALL votes?')) return;
     try {
       const candSnap = await getDocs(collection(db, 'candidates'));
-      for (const d of candSnap.docs) {
-        await updateDoc(doc(db, 'candidates', d.id), { votes: 0 });
-      }
+      for (const d of candSnap.docs) { await updateDoc(doc(db, 'candidates', d.id), { votes: 0 }); }
       loadData();
       alert('All votes cleared.');
-    } catch (e) {
-      alert('FAILED: ' + e.message);
-    }
+    } catch (e) { alert('FAILED: ' + e.message); }
   };
 
-  const handleLogout = () => {
-    navigate('/admin');
-  };
-
-  const calculatePoints = (votes) => {
-    return (votes || 0) * 10;
-  };
-
+  const handleLogout = () => { navigate('/admin'); };
+  const calculatePoints = (votes) => { return (votes || 0) * 10; };
   const totalVotes = candidates.reduce((sum, c) => sum + (c.votes || 0), 0);
 
   const startDateTime = settings.startDate && settings.startTime ? new Date(settings.startDate + 'T' + settings.startTime) : null;
@@ -171,31 +146,22 @@ export default function AdminDashboard() {
     return { label: 'LIVE', color: '#16a34a' };
   };
 
-  const sortedByVotes = [...candidates].sort((a, b) => (b.votes || 0) - (a.votes || 0));
   const phase = getElectionPhase();
-
+  const sortedByVotes = [...candidates].sort((a, b) => (b.votes || 0) - (a.votes || 0));
   const inputStyle = { width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '12px', boxSizing: 'border-box' };
   const btnStyle = (isActive) => ({ padding: '8px 16px', borderRadius: '4px', fontWeight: '600', background: isActive ? '#2563eb' : '#e5e7eb', color: isActive ? 'white' : '#374151', border: 'none', cursor: 'pointer' });
 
   const positionCounts = {};
-  candidates.forEach(c => {
-    positionCounts[c.position] = (positionCounts[c.position] || 0) + 1;
-  });
+  candidates.forEach(c => { positionCounts[c.position] = (positionCounts[c.position] || 0) + 1; });
   const positions = Object.keys(positionCounts);
 
-  if (loading) {
-    return <div style={{ minHeight: '100vh', background: '#003366', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>Loading Admin Panel...</div>;
-  }
-
-  if (error) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#003366', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif', padding: '32px', textAlign: 'center' }}>
-        <h2 style={{ color: '#dc2626' }}>ERROR</h2>
-        <p>{error}</p>
-        <button onClick={loadData} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '12px' }}>Retry</button>
-      </div>
-    );
-  }
+  if (loading) return <div style={{ minHeight: '100vh', background: '#003366', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>Loading Admin Panel...</div>;
+  if (error) return (
+    <div style={{ minHeight: '100vh', background: '#003366', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif', padding: '32px', textAlign: 'center' }}>
+      <h2 style={{ color: '#dc2626' }}>ERROR</h2><p>{error}</p>
+      <button onClick={loadData} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '12px' }}>Retry</button>
+    </div>
+  );
 
   return (
     <div style={{ minHeight: '100vh', background: '#f3f4f6', fontFamily: 'Arial, sans-serif' }}>
@@ -228,14 +194,12 @@ export default function AdminDashboard() {
             </div>
             <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '4px', fontSize: '14px' }}>
               <p><strong>Status:</strong> <span style={{ color: phase.color }}>{phase.label}</span></p>
-              {settings.startDate && (
-                <p>Start: {settings.startDate} at {settings.startTime}<br/>End: {settings.endDate} at {settings.endTime}<br/>Year: {settings.year}</p>
-              )}
+              {settings.startDate && ( <p>Start: {settings.startDate} at {settings.startTime}<br/>End: {settings.endDate} at {settings.endTime}<br/>Year: {settings.year}</p> )}
               <p><strong>Candidate Limit:</strong> Maximum of {MAX_PER_POSITION} candidates <strong>per position</strong></p>
-              <p>Total candidates: {candidates.length} across {positions.length} position(s)</p>
+              <p>Total candidates: {candidates.length} across {positions.length} positions</p>
               {positions.map(pos => (
                 <p key={pos} style={{ margin: '4px 0', fontSize: '13px' }}>
-                  {pos}: {positionCounts[pos]}/{MAX_PER_POSITION} {positionCounts[pos] >= MAX_PER_POSITION ? '(FULL)' : `(${MAX_PER_POSITION - positionCounts[pos]} slot(s) left)`}
+                  {pos}: {positionCounts[pos]}/{MAX_PER_POSITION} {positionCounts[pos] >= MAX_PER_POSITION ? '(FULL)' : `(${MAX_PER_POSITION - positionCounts[pos]} slots left)`}
                 </p>
               ))}
             </div>
@@ -256,14 +220,9 @@ export default function AdminDashboard() {
 
             <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '4px', marginBottom: '16px', fontSize: '14px' }}>
               <strong>Per-Position Limits (Max {MAX_PER_POSITION} per position):</strong>
-              {positions.length === 0 ? <p style={{ margin: '4px 0' }}>No positions yet</p> : (
-                positions.map(pos => (
-                  <p key={pos} style={{ margin: '4px 0' }}>
-                    {pos}: {positionCounts[pos]}/{MAX_PER_POSITION}
-                    {positionCounts[pos] >= MAX_PER_POSITION ? ' FULL' : ''}
-                  </p>
-                ))
-              )}
+              {positions.length === 0 ? <p style={{ margin: '4px 0' }}>No positions yet</p> : positions.map(pos => (
+                <p key={pos} style={{ margin: '4px 0' }}>{pos}: {positionCounts[pos]}/{MAX_PER_POSITION} {positionCounts[pos] >= MAX_PER_POSITION ? ' FULL' : ''}</p>
+              ))}
             </div>
 
             <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '4px', marginBottom: '16px' }}>
@@ -286,19 +245,13 @@ export default function AdminDashboard() {
             </div>
 
             <h3>All Candidates ({candidates.length})</h3>
-            {candidates.length === 0 ? (
-              <p style={{ color: '#666' }}>No candidates added yet.</p>
-            ) : (
+            {candidates.length === 0 ? <p style={{ color: '#666' }}>No candidates added yet.</p> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {candidates.map((cand) => (
+                {candidates.map(cand => (
                   <div key={cand.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       {cand.photoURL && <img src={cand.photoURL} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%' }} />}
-                      <div>
-                        <strong>{cand.name}</strong> - {cand.position}
-                        {cand.dept && <span style={{ color: '#666', fontSize: '13px' }}> ({cand.dept})</span>}
-                        <span style={{ color: '#666', fontSize: '13px', marginLeft: '8px' }}>Votes: {cand.votes || 0}</span>
-                      </div>
+                      <div><strong>{cand.name}</strong> - {cand.position}{cand.dept && <span style={{ color: '#666', fontSize: '13px' }}> ({cand.dept})</span>}<span style={{ color: '#666', fontSize: '13px', marginLeft: '8px' }}>Votes: {cand.votes || 0}</span></div>
                     </div>
                     <button onClick={() => deleteCandidate(cand.id, cand.photoURL)} style={{ padding: '6px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Delete</button>
                   </div>
@@ -312,18 +265,13 @@ export default function AdminDashboard() {
           <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '16px' }}>
               <button onClick={clearAllVotes} style={{ padding: '8px 20px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>Clear All Votes</button>
-              <button onClick={() => window.print()} style={{ padding: '8px 20px', background: '#003366', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>Print / Export PDF</button>
+              <button onClick={() => window.print()} style={{ padding: '8px 20px', background: '#003366', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>Print Results</button>
             </div>
-
             <div id="results-content" style={{ padding: '24px', border: '1px solid #e5e7eb', borderRadius: '4px' }}>
               <h1 style={{ textAlign: 'center', color: '#003366' }}>NAMATL STUDENT E-VOTING</h1>
-              <hr/>
-              {settings.year && <p style={{ textAlign: 'center', fontWeight: 'bold' }}>{settings.year} Election</p>}
+              <hr/>{settings.year && <p style={{ textAlign: 'center', fontWeight: 'bold' }}>{settings.year} Election</p>}
               <h2 style={{ textAlign: 'center' }}>OFFICIAL ELECTION RESULTS</h2>
-
-              {candidates.length === 0 ? (
-                <p style={{ textAlign: 'center' }}>No candidates to display results for</p>
-              ) : (
+              {candidates.length === 0 ? <p style={{ textAlign: 'center' }}>No candidates</p> : (
                 <div>
                   {positions.map(pos => {
                     const posCandidates = sortedByVotes.filter(c => c.position === pos);
@@ -332,46 +280,31 @@ export default function AdminDashboard() {
                       <div key={pos} style={{ marginBottom: '32px' }}>
                         <h3 style={{ color: '#003366', borderBottom: '2px solid #003366', paddingBottom: '8px' }}>{pos}</h3>
                         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>
-                          <thead>
-                            <tr style={{ background: '#003366', color: 'white' }}>
-                              <th style={{ padding: '8px', border: '1px solid #003366' }}>S/N</th>
-                              <th style={{ padding: '8px', border: '1px solid #003366' }}>Candidate Name</th>
-                              <th style={{ padding: '8px', border: '1px solid #003366' }}>Votes</th>
-                              <th style={{ padding: '8px', border: '1px solid #003366' }}>Points</th>
+                          <thead><tr style={{ background: '#003366', color: 'white' }}>
+                            <th style={{ padding: '8px', border: '1px solid #003366' }}>#</th>
+                            <th style={{ padding: '8px', border: '1px solid #003366' }}>Candidate</th>
+                            <th style={{ padding: '8px', border: '1px solid #003366' }}>Votes</th>
+                            <th style={{ padding: '8px', border: '1px solid #003366' }}>Points</th>
+                          </tr></thead>
+                          <tbody>{posCandidates.map((cand, i) => (
+                            <tr key={cand.id} style={{ background: i === 0 ? '#f0fdf4' : 'white' }}>
+                              <td style={{ padding: '8px', border: '1px solid #d1d5db', textAlign: 'center' }}>{i + 1}</td>
+                              <td style={{ padding: '8px', border: '1px solid #d1d5db' }}>{i === 0 ? 'WINNER - ' : ''}{cand.name}</td>
+                              <td style={{ padding: '8px', border: '1px solid #d1d5db', textAlign: 'center' }}>{cand.votes || 0}</td>
+                              <td style={{ padding: '8px', border: '1px solid #d1d5db', textAlign: 'center' }}>{calculatePoints(cand.votes)}</td>
                             </tr>
-                          </thead>
-                          <tbody>
-                            {posCandidates.map((cand, index) => (
-                              <tr key={cand.id} style={{ background: index === 0 ? '#f0fdf4' : 'white' }}>
-                                <td style={{ padding: '8px', border: '1px solid #d1d5db', textAlign: 'center' }}>{index + 1}</td>
-                                <td style={{ padding: '8px', border: '1px solid #d1d5db' }}>{index === 0 ? 'WINNER - ' : ''}{cand.name}</td>
-                                <td style={{ padding: '8px', border: '1px solid #d1d5db', textAlign: 'center' }}>{cand.votes || 0}</td>
-                                <td style={{ padding: '8px', border: '1px solid #d1d5db', textAlign: 'center' }}>{calculatePoints(cand.votes)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
+                          ))}</tbody>
                         </table>
-                        {posWinner && (
-                          <p style={{ fontWeight: 'bold', color: '#16a34a' }}>
-                            Winner: {posWinner.name} with {posWinner.votes || 0} votes ({calculatePoints(posWinner.votes)} points)
-                          </p>
-                        )}
+                        {posWinner && <p style={{ fontWeight: 'bold', color: '#16a34a' }}>Winner: {posWinner.name} with {posWinner.votes || 0} votes ({calculatePoints(posWinner.votes)} points)</p>}
                       </div>
                     );
                   })}
-
-                  <hr/>
-                  <p style={{ textAlign: 'center', fontStyle: 'italic' }}>Approved by the Electoral Chairman</p>
-                  <hr/>
-                  <p style={{ textAlign: 'center' }}>Electoral Chairman Signature</p>
-                  <hr/>
-                  <p style={{ textAlign: 'center' }}>Electoral Secretary Signature</p>
+                  <hr/><p style={{ textAlign: 'center', fontStyle: 'italic' }}>Approved by the Electoral Chairman</p>
+                  <hr/><p style={{ textAlign: 'center' }}>Electoral Chairman Signature</p>
+                  <hr/><p style={{ textAlign: 'center' }}>Electoral Secretary Signature</p>
                 </div>
               )}
-
-              <p style={{ textAlign: 'center', marginTop: '24px' }}>
-                <a href="#/" style={{ color: '#2563eb' }}>Go back to homepage</a>
-              </p>
+              <p style={{ textAlign: 'center', marginTop: '24px' }}><a href="#/" style={{ color: '#2563eb' }}>Go back to homepage</a></p>
             </div>
           </div>
         )}
