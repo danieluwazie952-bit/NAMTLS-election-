@@ -4,10 +4,7 @@ import { db, storage } from '../firebase';
 import { collection, addDoc, getDocs, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
-// ===== CONFIGURABLE CANDIDATE LIMIT =====
-// Set to 0 or false for NO LIMIT (Infinity).
-// Set to any positive number (e.g., 5) to enforce a limit.
-const MAX_CANDIDATES = 5; // NOW SET TO 5
+const MAX_CANDIDATES = 5;
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -55,7 +52,6 @@ export default function AdminDashboard() {
     reader.readAsDataURL(file);
   };
 
-  // ===== CHECK CANDIDATE LIMIT =====
   const isCandidateLimitReached = () => {
     if (MAX_CANDIDATES === 0 || MAX_CANDIDATES === false) return false;
     return candidates.length >= MAX_CANDIDATES;
@@ -64,12 +60,11 @@ export default function AdminDashboard() {
   const getCandidateLimitMessage = () => {
     if (MAX_CANDIDATES === 0 || MAX_CANDIDATES === false) return '';
     const remaining = MAX_CANDIDATES - candidates.length;
-    if (remaining <= 0) return `Maximum of ${MAX_CANDIDATES} candidates reached. You cannot add more. Please remove one first.`;
+    if (remaining <= 0) return `Maximum of ${MAX_CANDIDATES} candidates reached. Please remove one first.`;
     if (remaining === 1) return `Only 1 slot remaining. Maximum: ${MAX_CANDIDATES} candidates.`;
     return `${remaining} slots remaining out of ${MAX_CANDIDATES} maximum candidates.`;
   };
 
-  // ===== SAVE SETTINGS =====
   const saveSettings = async () => {
     if (!settings.year || !settings.startDate || !settings.startTime || !settings.endDate || !settings.endTime) {
       alert('Please fill all election details: Year, Start Date/Time, and End Date/Time');
@@ -109,13 +104,11 @@ export default function AdminDashboard() {
     }
   };
 
-  // ===== DELETE ELECTION =====
   const deleteElection = async () => {
     const confirmDelete = window.confirm(
       'DELETE ENTIRE ELECTION?\n\nThis will delete ALL candidates, votes, and settings. This CANNOT be undone.\nAre you sure?'
     );
     if (!confirmDelete) return;
-
     try {
       const candSnap = await getDocs(collection(db, 'candidates'));
       const deletePromises = candSnap.docs.map((candDoc) => {
@@ -152,7 +145,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // ===== ADD CANDIDATE =====
   const addCandidate = async () => {
     if (!name || !position) { alert('Please fill Name and Position'); return; }
     if (isCandidateLimitReached()) {
@@ -192,7 +184,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // ===== DELETE SINGLE CANDIDATE =====
   const deleteCandidate = async (candidateId, photoURL) => {
     const confirmDelete = window.confirm('Delete this candidate? This cannot be undone.');
     if (!confirmDelete) return;
@@ -215,7 +206,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // ===== CLEAR RESULTS =====
   const clearResults = async () => {
     const confirmClear = window.confirm('Reset ALL votes to 0? This will clear all voting results but keep candidates.');
     if (!confirmClear) return;
@@ -234,10 +224,7 @@ export default function AdminDashboard() {
   };
 
   const totalVotes = candidates.reduce((sum, c) => sum + (c.votes || 0), 0);
-
-  const calculatePoints = (votes) => {
-    return ((votes || 0) / 2).toFixed(1);
-  };
+  const calculatePoints = (votes) => ((votes || 0) / 2).toFixed(1);
 
   const btnStyle = (isActive) => ({
     padding: '8px 16px',
@@ -297,15 +284,9 @@ export default function AdminDashboard() {
     );
   }
 
-  // ===== ELECTION PHASE DETECTION =====
-  const startDateTime = settings.startDate && settings.startTime
-    ? new Date(settings.startDate + 'T' + settings.startTime)
-    : null;
-  const endDateTime = settings.endDate && settings.endTime
-    ? new Date(settings.endDate + 'T' + settings.endTime)
-    : null;
+  const startDateTime = settings.startDate && settings.startTime ? new Date(settings.startDate + 'T' + settings.startTime) : null;
+  const endDateTime = settings.endDate && settings.endTime ? new Date(settings.endDate + 'T' + settings.endTime) : null;
   const now = new Date();
-
   const isElectionStarted = startDateTime ? now >= startDateTime : false;
   const isElectionEnded = endDateTime ? now >= endDateTime : false;
 
@@ -336,34 +317,23 @@ export default function AdminDashboard() {
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       `}</style>
 
-      {/* HEADER */}
-      <div className="no-print" style={{
-        background: '#003366', color: 'white', padding: '12px 24px',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-      }}>
+      <div className="no-print" style={{ background: '#003366', color: 'white', padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ margin: 0, fontSize: '20px' }}>Admin Dashboard</h1>
-        <button onClick={handleLogout} style={{
-          padding: '8px 20px', background: '#dc2626', color: 'white',
-          border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer'
-        }}>Logout</button>
+        <button onClick={handleLogout} style={{ padding: '8px 20px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>Logout</button>
       </div>
 
-      {/* TAB BUTTONS */}
       <div className="no-print" style={{ padding: '12px 24px', background: 'white', borderBottom: '1px solid #ddd' }}>
         <button onClick={() => setTab('settings')} style={btnStyle(tab === 'settings')}>Election Settings</button>
         <button onClick={() => setTab('candidates')} style={btnStyle(tab === 'candidates')}>Manage Candidates</button>
         <button onClick={() => setTab('results')} style={btnStyle(tab === 'results')}>View Results</button>
       </div>
 
-      {/* ===== TAB: SETTINGS ===== */}
       {tab === 'settings' && (
         <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <h2 style={{ margin: '0 0 16px 0', color: '#003366' }}>Set Election Details</h2>
-
             <label style={{ fontWeight: 'bold', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Election Year</label>
             <input placeholder="e.g. 2026/2027" value={settings.year} onChange={(e) => setSettings({ ...settings, year: e.target.value })} style={inputStyle} />
-
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <label style={{ fontWeight: 'bold', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Start Date</label>
@@ -382,34 +352,19 @@ export default function AdminDashboard() {
                 <input placeholder="e.g. 5:00 PM" value={settings.endTime} onChange={(e) => setSettings({ ...settings, endTime: e.target.value })} style={inputStyle} />
               </div>
             </div>
-
             <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
-              <button onClick={saveSettings} style={{
-                padding: '10px 24px', background: '#2563eb', color: 'white',
-                border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer'
-              }}>Save Settings</button>
-              <button onClick={toggleElection} style={{
-                padding: '10px 24px',
-                background: settings.isActive ? '#dc2626' : '#16a34a',
-                color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer'
-              }}>
+              <button onClick={saveSettings} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>Save Settings</button>
+              <button onClick={toggleElection} style={{ padding: '10px 24px', background: settings.isActive ? '#dc2626' : '#16a34a', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>
                 {settings.isActive ? 'Deactivate Election' : 'Activate Election'}
               </button>
               {settings.isActive && (
-                <button onClick={deleteElection} style={{
-                  padding: '10px 24px', background: '#6b7280', color: 'white',
-                  border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer'
-                }}>Delete Election (Clear All)</button>
+                <button onClick={deleteElection} style={{ padding: '10px 24px', background: '#6b7280', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>Delete Election (Clear All)</button>
               )}
             </div>
-
             <div style={{ marginTop: '16px', padding: '12px', background: '#f0f2f5', borderRadius: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <strong>Status:</strong>
-                <span style={{
-                  display: 'inline-block', padding: '3px 12px', borderRadius: '12px',
-                  background: phase.color, color: 'white', fontWeight: 'bold', fontSize: '12px'
-                }}>{phase.label}</span>
+                <span style={{ display: 'inline-block', padding: '3px 12px', borderRadius: '12px', background: phase.color, color: 'white', fontWeight: 'bold', fontSize: '12px' }}>{phase.label}</span>
               </div>
               {settings.startDate && (
                 <div style={{ fontSize: '13px', color: '#555' }}>
@@ -417,12 +372,11 @@ export default function AdminDashboard() {
                   <p style={{ margin: '2px 0' }}><strong>End:</strong> {settings.endDate} at {settings.endTime}</p>
                   <p style={{ margin: '2px 0' }}><strong>Year:</strong> {settings.year}</p>
                   <p style={{ margin: '2px 0', color: isElectionEnded ? '#dc2626' : (isElectionStarted ? '#16a34a' : '#f59e0b') }}>
-                    {isElectionEnded ? '⛔ Voting has ended' : (isElectionStarted ? '✅ Voting is open' : '⏳ Voting has not started yet')}
+                    {isElectionEnded ? 'Voting has ended' : (isElectionStarted ? 'Voting is open' : 'Voting has not started yet')}
                   </p>
                 </div>
               )}
             </div>
-
             <div style={{ marginTop: '16px', padding: '12px', background: '#e0f2fe', borderRadius: '4px', border: '1px solid #bae6fd' }}>
               <strong>Candidate Limit:</strong>{' '}
               {MAX_CANDIDATES === 0 || MAX_CANDIDATES === false
@@ -439,41 +393,24 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ===== TAB: CANDIDATES ===== */}
       {tab === 'candidates' && (
         <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
           <div style={{ background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ margin: 0, color: '#003366' }}>Manage Candidates</h2>
-              <span style={{ fontWeight: 'bold', color: '#666' }}>
-                Total Candidates: {candidates.length}{MAX_CANDIDATES > 0 && ` / ${MAX_CANDIDATES}`}
-              </span>
+              <span style={{ fontWeight: 'bold', color: '#666' }}>Total Candidates: {candidates.length}{MAX_CANDIDATES > 0 && ` / ${MAX_CANDIDATES}`}</span>
             </div>
-
             <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
-              <div style={{ padding: '12px', background: '#f0f2f5', borderRadius: '4px', flex: '1', minWidth: '150px', textAlign: 'center' }}>
-                <strong>Total Votes Cast:</strong><br/>{totalVotes}
-              </div>
-              <div style={{ padding: '12px', background: '#f0f2f5', borderRadius: '4px', flex: '1', minWidth: '150px', textAlign: 'center' }}>
-                <strong>Year:</strong><br/>{settings.year || 'Not Set'}
-              </div>
-              <div style={{ padding: '12px', background: '#f0f2f5', borderRadius: '4px', flex: '1', minWidth: '150px', textAlign: 'center' }}>
-                <strong>Phase:</strong><br/>
-                <span style={{ color: phase.color, fontWeight: 'bold' }}>{phase.label}</span>
-              </div>
+              <div style={{ padding: '12px', background: '#f0f2f5', borderRadius: '4px', flex: '1', minWidth: '150px', textAlign: 'center' }}><strong>Total Votes Cast:</strong><br/>{totalVotes}</div>
+              <div style={{ padding: '12px', background: '#f0f2f5', borderRadius: '4px', flex: '1', minWidth: '150px', textAlign: 'center' }}><strong>Year:</strong><br/>{settings.year || 'Not Set'}</div>
+              <div style={{ padding: '12px', background: '#f0f2f5', borderRadius: '4px', flex: '1', minWidth: '150px', textAlign: 'center' }}><strong>Phase:</strong><br/><span style={{ color: phase.color, fontWeight: 'bold' }}>{phase.label}</span></div>
             </div>
-
             {isCandidateLimitReached() && (
-              <div style={{ padding: '10px', background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '4px', marginBottom: '16px', color: '#92400e', fontWeight: 'bold', fontSize: '13px' }}>
-                {getCandidateLimitMessage()}
-              </div>
+              <div style={{ padding: '10px', background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '4px', marginBottom: '16px', color: '#92400e', fontWeight: 'bold', fontSize: '13px' }}>{getCandidateLimitMessage()}</div>
             )}
             {!isCandidateLimitReached() && getCandidateLimitMessage() && (
-              <div style={{ padding: '10px', background: '#e0f2fe', border: '1px solid #bae6fd', borderRadius: '4px', marginBottom: '16px', color: '#0369a1', fontSize: '13px' }}>
-                {getCandidateLimitMessage()}
-              </div>
+              <div style={{ padding: '10px', background: '#e0f2fe', border: '1px solid #bae6fd', borderRadius: '4px', marginBottom: '16px', color: '#0369a1', fontSize: '13px' }}>{getCandidateLimitMessage()}</div>
             )}
-
             <h3 style={{ color: '#003366', margin: '16px 0 12px 0' }}>Add Candidate</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <input placeholder="Candidate Name" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
@@ -481,22 +418,14 @@ export default function AdminDashboard() {
               <input placeholder="Department (optional)" value={dept} onChange={(e) => setDept(e.target.value)} style={inputStyle} />
               <input placeholder="Manifesto (optional)" value={manifesto} onChange={(e) => setManifesto(e.target.value)} style={inputStyle} />
             </div>
-
             <div style={{ marginBottom: '12px' }}>
               <label style={{ fontWeight: 'bold', fontSize: '13px', display: 'block', marginBottom: '4px' }}>Photo (optional)</label>
               <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ fontSize: '13px' }} />
-              {photoPreview && (
-                <img src={photoPreview} alt="Preview" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', marginTop: '8px' }} />
-              )}
+              {photoPreview && <img src={photoPreview} alt="Preview" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', marginTop: '8px' }} />}
             </div>
-
-            <button onClick={addCandidate} disabled={isCandidateLimitReached()} style={{
-              padding: '10px 24px',
-              background: isCandidateLimitReached() ? '#9ca3af' : '#2563eb',
-              color: 'white', border: 'none', borderRadius: '4px',
-              fontWeight: 'bold', cursor: isCandidateLimitReached() ? 'not-allowed' : 'pointer'
-            }}>{isCandidateLimitReached() ? 'Max Candidates Reached (5)' : 'Add Candidate'}</button>
-
+            <button onClick={addCandidate} disabled={isCandidateLimitReached()} style={{ padding: '10px 24px', background: isCandidateLimitReached() ? '#9ca3af' : '#2563eb', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: isCandidateLimitReached() ? 'not-allowed' : 'pointer' }}>
+              {isCandidateLimitReached() ? 'Max Candidates Reached (5)' : 'Add Candidate'}
+            </button>
             <div style={{ marginTop: '24px' }}>
               <h3 style={{ color: '#003366', margin: '0 0 12px 0' }}>All Candidates ({candidates.length})</h3>
               {candidates.length === 0 ? (
@@ -504,10 +433,7 @@ export default function AdminDashboard() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {candidates.map((cand) => (
-                    <div key={cand.id} style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '12px', background: '#f9fafb', borderRadius: '4px', border: '1px solid #e5e7eb'
-                    }}>
+                    <div key={cand.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#f9fafb', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         {cand.photoURL && <img src={cand.photoURL} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />}
                         <div>
@@ -517,10 +443,7 @@ export default function AdminDashboard() {
                           <span style={{ color: '#2563eb', fontSize: '12px', marginLeft: '8px' }}>Votes: {cand.votes || 0}</span>
                         </div>
                       </div>
-                      <button onClick={() => deleteCandidate(cand.id, cand.photoURL)} style={{
-                        padding: '6px 12px', background: '#dc2626', color: 'white',
-                        border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold'
-                      }}>Delete</button>
+                      <button onClick={() => deleteCandidate(cand.id, cand.photoURL)} style={{ padding: '6px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Delete</button>
                     </div>
                   ))}
                 </div>
@@ -530,66 +453,28 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ===== TAB: RESULTS ===== */}
       {tab === 'results' && (
         <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }} id="result-page-wrapper">
-          {/* Admin controls - hidden from print via class */}
-          <div className="no-print" style={{
-            background: 'white', padding: '16px', borderRadius: '8px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px',
-            display: 'flex', gap: '12px', flexWrap: 'wrap'
-          }}>
-            <button onClick={clearResults} style={{
-              padding: '8px 20px', background: '#dc2626', color: 'white',
-              border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer'
-            }}>Clear All Votes</button>
-            <button onClick={() => window.print()} style={{
-              padding: '8px 20px', background: '#003366', color: 'white',
-              border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer'
-            }}>Print / Export PDF</button>
+          <div className="no-print" style={{ background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button onClick={clearResults} style={{ padding: '8px 20px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>Clear All Votes</button>
+            <button onClick={() => window.print()} style={{ padding: '8px 20px', background: '#003366', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>Print / Export PDF</button>
           </div>
 
-          {/* ===== PRINT RESULT AREA ===== */}
-          <div id="result-print-area" style={{
-            background: 'white',
-            padding: '40px',
-            borderRadius: '8px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-          }}>
-            {/* Title */}
+          <div id="result-print-area" style={{ background: 'white', padding: '40px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <h1 style={{ fontSize: '22px', color: '#003366', margin: '0 0 4px 0' }}>
-                NAMATL STUDENT E-VOTING
-              </h1>
+              <h1 style={{ fontSize: '22px', color: '#003366', margin: '0 0 4px 0' }}>NAMATL STUDENT E-VOTING</h1>
               <hr style={{ width: '80px', border: 'none', borderTop: '3px solid #FFD700', margin: '8px auto' }} />
               {settings.year && <p style={{ fontSize: '14px', color: '#666', margin: '0' }}>{settings.year} Election</p>}
             </div>
-
-            {/* Official Results */}
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <h2 style={{
-                fontSize: '20px',
-                color: '#003366',
-                fontWeight: 'bold',
-                margin: '0 0 8px 0',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-                borderBottom: '2px solid #003366',
-                paddingBottom: '8px',
-                display: 'inline-block'
-              }}>
-                OFFICIAL ELECTION RESULTS
-              </h2>
+              <h2 style={{ fontSize: '20px', color: '#003366', fontWeight: 'bold', margin: '0 0 8px 0', letterSpacing: '2px', textTransform: 'uppercase', borderBottom: '2px solid #003366', paddingBottom: '8px', display: 'inline-block' }}>OFFICIAL ELECTION RESULTS</h2>
             </div>
-
-            {/* Content */}
             {candidates.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px', color: '#666' }}>
                 <p style={{ fontSize: '18px', fontStyle: 'italic' }}>No candidates to display results for</p>
               </div>
             ) : (
               <>
-                {/* Result Table */}
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '32px', fontSize: '14px' }}>
                   <thead>
                     <tr style={{ background: '#003366', color: 'white' }}>
@@ -602,15 +487,9 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody>
                     {sortedByVotes.map((cand, index) => (
-                      <tr key={cand.id} style={{
-                        background: index === 0 ? '#fefce8' : (index % 2 === 0 ? '#f9fafb' : 'white'),
-                        fontWeight: index === 0 ? 'bold' : 'normal'
-                      }}>
+                      <tr key={cand.id} style={{ background: index === 0 ? '#fefce8' : (index % 2 === 0 ? '#f9fafb' : 'white'), fontWeight: index === 0 ? 'bold' : 'normal' }}>
                         <td style={{ padding: '10px 16px', border: '1px solid #d1d5db', textAlign: 'center' }}>{index + 1}</td>
-                        <td style={{ padding: '10px 16px', border: '1px solid #d1d5db' }}>
-                          {index === 0 && <span style={{ color: '#16a34a' }}>🏆 </span>}
-                          {cand.name}
-                        </td>
+                        <td style={{ padding: '10px 16px', border: '1px solid #d1d5db' }}>{index === 0 && <span style={{ color: '#16a34a' }}>🏆 </span>}{cand.name}</td>
                         <td style={{ padding: '10px 16px', border: '1px solid #d1d5db' }}>{cand.position}</td>
                         <td style={{ padding: '10px 16px', border: '1px solid #d1d5db', textAlign: 'center' }}>{cand.votes || 0}</td>
                         <td style={{ padding: '10px 16px', border: '1px solid #d1d5db', textAlign: 'center' }}>{calculatePoints(cand.votes)}</td>
@@ -618,53 +497,21 @@ export default function AdminDashboard() {
                     ))}
                   </tbody>
                 </table>
-
-                {/* Winner */}
                 {winner && (
-                  <div style={{
-                    textAlign: 'center',
-                    padding: '16px',
-                    background: '#fefce8',
-                    border: '2px solid #16a34a',
-                    borderRadius: '8px',
-                    marginBottom: '32px'
-                  }}>
+                  <div style={{ textAlign: 'center', padding: '16px', background: '#fefce8', border: '2px solid #16a34a', borderRadius: '8px', marginBottom: '32px' }}>
                     <p style={{ fontSize: '16px', margin: '0', color: '#003366' }}>
-                      <strong>Winner:</strong>{' '}
-                      <span style={{ color: '#16a34a', fontSize: '18px' }}>{winner.name}</span>{' '}
-                      with {winner.votes || 0} votes ({calculatePoints(winner.votes)} points)
+                      <strong>Winner:</strong> <span style={{ color: '#16a34a', fontSize: '18px' }}>{winner.name}</span> with {winner.votes || 0} votes ({calculatePoints(winner.votes)} points)
                     </p>
                   </div>
                 )}
-
-                {/* Approval Box */}
-                <div style={{
-                  marginTop: '40px',
-                  borderTop: '2px solid #003366',
-                  paddingTop: '24px',
-                  textAlign: 'right'
-                }}>
-                  <div style={{
-                    border: '2px solid #003366',
-                    padding: '16px 24px',
-                    borderRadius: '4px',
-                    display: 'inline-block',
-                    textAlign: 'center',
-                    minWidth: '300px',
-                    maxWidth: '100%'
-                  }}>
-                    <p style={{ fontWeight: 'bold', color: '#003366', margin: '0 0 4px 0', fontSize: '14px' }}>
-                      Approved by the Electoral Chairman
-                    </p>
+                <div style={{ marginTop: '40px', borderTop: '2px solid #003366', paddingTop: '24px', textAlign: 'right' }}>
+                  <div style={{ border: '2px solid #003366', padding: '16px 24px', borderRadius: '4px', display: 'inline-block', textAlign: 'center', minWidth: '300px', maxWidth: '100%' }}>
+                    <p style={{ fontWeight: 'bold', color: '#003366', margin: '0 0 4px 0', fontSize: '14px' }}>Approved by the Electoral Chairman</p>
                     <hr style={{ width: '200px', margin: '8px auto', border: '1px solid #003366' }} />
-                    <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>
-                      Electoral Chairman Signature
-                    </p>
+                    <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>Electoral Chairman Signature</p>
                     <div style={{ marginTop: '24px' }}>
                       <hr style={{ width: '200px', margin: '8px auto', border: '1px solid #003366' }} />
-                      <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>
-                        Electoral Secretary Signature
-                      </p>
+                      <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>Electoral Secretary Signature</p>
                     </div>
                   </div>
                 </div>
@@ -673,7 +520,7 @@ export default function AdminDashboard() {
           </div>
 
           <div style={{ textAlign: 'center', marginTop: '20px' }} className="no-print">
-            <a href="#/" style={{ color: '#2563eb', fontSize: '13px' }}>Back to Home</a>
+            <a href="#/" style={{ color: '#2563eb', fontSize: '13px' }}>Go back to homepage</a>
           </div>
         </div>
       )}
