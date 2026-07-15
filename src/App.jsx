@@ -35,8 +35,8 @@ class ErrorBoundary extends Component {
         }}>
           <h1 style={{ fontSize: '24px', margin: '0 0 8px 0' }}>NAMATL STUDENT E-VOTING</h1>
           <hr style={{ width: '60%', border: 'none', borderTop: '2px solid #FFD700', margin: '12px auto' }} />
-          <h2 style={{ color: '#dc2626' }}>APPLICATION ERROR</h2>
-          <p style={{ color: '#ccc', margin: '12px 0' }}>
+          <h2 style={{ color: '#dc2626', margin: '20px 0 8px 0' }}>APPLICATION ERROR</h2>
+          <p style={{ color: '#ccc', fontSize: '14px', margin: '0 0 16px 0' }}>
             {this.state.error && this.state.error.message ? this.state.error.message : 'Unknown error occurred'}
           </p>
           <button
@@ -58,7 +58,7 @@ class ErrorBoundary extends Component {
           >
             Reset and Go Home
           </button>
-          <p style={{ fontSize: '12px', color: '#888', marginTop: '24px' }}>
+          <p style={{ color: '#666', fontSize: '11px', marginTop: '24px' }}>
             Check browser console (F12) for full details
           </p>
         </div>
@@ -75,25 +75,23 @@ function LoadingScreen() {
       background: '#003366',
       color: 'white',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       fontFamily: 'Arial, sans-serif',
-      textAlign: 'center',
-      padding: '40px'
+      textAlign: 'center'
     }}>
-      <div>
-        <h1 style={{ fontSize: '24px', margin: '0 0 8px 0' }}>NAMATL STUDENT E-VOTING</h1>
-        <hr style={{ width: '60%', border: 'none', borderTop: '2px solid #FFD700', margin: '12px auto' }} />
-        <div style={{
-          border: '4px solid #FFD700',
-          borderTop: '4px solid transparent',
-          borderRadius: '50%',
-          width: '40px',
-          height: '40px',
-          animation: 'spin 1s linear infinite',
-          margin: '20px auto'
-        }}></div>
-      </div>
+      <h1 style={{ fontSize: '24px', margin: '0 0 8px 0' }}>NAMATL STUDENT E-VOTING</h1>
+      <hr style={{ width: '60%', border: 'none', borderTop: '2px solid #FFD700', margin: '12px auto' }} />
+      <div style={{
+        border: '4px solid #FFD700',
+        borderTop: '4px solid transparent',
+        borderRadius: '50%',
+        width: '40px',
+        height: '40px',
+        animation: 'spin 1s linear infinite',
+        margin: '20px auto'
+      }}></div>
     </div>
   );
 }
