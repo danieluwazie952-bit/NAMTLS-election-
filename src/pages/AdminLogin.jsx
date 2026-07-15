@@ -14,7 +14,7 @@ export default function AdminLogin() {
     if (username === 'admin' && password === 'Officialelectoralcommission123') {
       navigate('/admin-dashboard');
     } else {
-      setError('Invalid Credentials. Ask admin for password ');
+      setError('Invalid Credentials. Ask admin for password.');
     }
   };
 
@@ -59,9 +59,10 @@ export default function AdminLogin() {
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
-        <h2 style={{ textAlign: 'center', color: '#003366', marginBottom: '24px' }}>
-          Admin Login
-        </h2>
+        <h2 style={{ margin: '0 0 4px 0', color: '#003366', textAlign: 'center' }}>Admin Login</h2>
+        <p style={{ margin: '0 0 20px 0', color: '#666', textAlign: 'center', fontSize: '13px' }}>
+          Authorized personnel only
+        </p>
 
         {error && (
           <div style={{
@@ -69,7 +70,7 @@ export default function AdminLogin() {
             background: '#fee2e2',
             color: '#dc2626',
             borderRadius: '4px',
-            marginBottom: '16px',
+            marginBottom: '12px',
             fontSize: '14px',
             fontWeight: 'bold',
             textAlign: 'center',
