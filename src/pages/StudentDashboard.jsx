@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { useDataCharge } from '../context/DataChargeContext';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -11,6 +12,7 @@ export default function StudentDashboard() {
   const [hasVoted, setHasVoted] = useState(false);
   const [student, setStudent] = useState(null);
   const navigate = useNavigate();
+  const { sessionSeconds, sessionCost } = useDataCharge();
 
   useEffect(() => {
     const loadData = async () => {
@@ -165,13 +167,16 @@ export default function StudentDashboard() {
     );
   }
 
-  // ELECTION IS COMING SOON — when election is not active/started
+  // "ELECTION IS COMING SOON" — only shown in Student Dashboard when admin has NOT activated election
   if (!isVotingOpen) {
     return (
       <div style={pageStyle}>
         <div style={headerStyle}>
           <h2 style={{ margin: 0 }}>NAMATL E-VOTING</h2>
-          <button onClick={handleLogout} style={btnStyle}>Logout</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <span style={{ fontSize: '12px', opacity: 0.7 }}>Session: {sessionSeconds}s | ₦{sessionCost}</span>
+            <button onClick={handleLogout} style={btnStyle}>Logout</button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -196,12 +201,15 @@ export default function StudentDashboard() {
     <div style={pageStyle}>
       <div style={headerStyle}>
         <h2 style={{ margin: 0 }}>Student Voting Portal</h2>
-        <button onClick={handleLogout} style={btnStyle}>Logout</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span style={{ fontSize: '12px', opacity: 0.7 }}>Session: {sessionSeconds}s | ₦{sessionCost}</span>
+          <button onClick={handleLogout} style={btnStyle}>Logout</button>
+        </div>
       </div>
 
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '16px' }}>
         <div style={cardStyle}>
-          <p>Welcome, <strong>{student.name}</strong> — {student.matric}</p>
+          <p>Welcome, <strong>{student.name}</strong> &mdash; {student.matric}</p>
           <p>
             Year: {settings.year || 'N/A'} {' '}
             <span style={{ background: badge.color, color: 'white', padding: '2px 10px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 'bold' }}>
