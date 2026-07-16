@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function Landing() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const containerStyle = {
     minHeight: '100vh',
     background: 'linear-gradient(135deg, #003366 0%, #004080 50%, #003366 100%)',
@@ -23,7 +26,7 @@ export default function Landing() {
     marginBottom: '20px'
   };
 
-  const plusStyle = {
+  const menuBtnStyle = {
     position: 'absolute',
     top: '20px',
     left: '20px',
@@ -32,16 +35,24 @@ export default function Landing() {
     background: 'rgba(255, 215, 0, 0.15)',
     borderRadius: '50%',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     textDecoration: 'none',
-    fontSize: '28px',
-    fontWeight: 'bold',
-    color: '#FFD700',
     border: '2px solid #FFD700',
     transition: 'all 0.3s ease',
     cursor: 'pointer',
-    zIndex: 10
+    zIndex: 20,
+    gap: '4px',
+    padding: '10px'
+  };
+
+  const dotStyle = {
+    width: '5px',
+    height: '5px',
+    borderRadius: '50%',
+    background: '#FFD700',
+    display: 'block'
   };
 
   const titleStyle = {
@@ -84,17 +95,79 @@ export default function Landing() {
     fontSize: '0.8rem'
   };
 
+  const menuDropdownStyle = {
+    position: 'absolute',
+    top: '80px',
+    left: '20px',
+    background: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+    zIndex: 30,
+    minWidth: '220px',
+    overflow: 'hidden',
+    animation: 'fadeIn 0.2s ease-out'
+  };
+
+  const menuItemStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '14px 20px',
+    color: '#333',
+    textDecoration: 'none',
+    fontSize: '15px',
+    fontWeight: '500',
+    borderBottom: '1px solid #f0f0f0',
+    transition: 'background 0.2s',
+    cursor: 'pointer'
+  };
+
   return (
     <div style={containerStyle}>
-      <Link
-        to="/admin"
-        style={plusStyle}
-        onMouseEnter={(e) => { e.target.style.transform = 'scale(1.2)'; e.target.style.background = 'rgba(255, 215, 0, 0.3)'; }}
-        onMouseLeave={(e) => { e.target.style.transform = 'scale(1)'; e.target.style.background = 'rgba(255, 215, 0, 0.15)'; }}
-        title="Admin Login"
+      {/* 3-dots menu button */}
+      <div
+        style={menuBtnStyle}
+        onClick={() => setMenuOpen(!menuOpen)}
+        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 215, 0, 0.3)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 215, 0, 0.15)'; }}
+        title="Menu"
       >
-        +
-      </Link>
+        <span style={dotStyle}></span>
+        <span style={dotStyle}></span>
+        <span style={dotStyle}></span>
+      </div>
+
+      {/* Dropdown menu */}
+      {menuOpen && (
+        <>
+          <div
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 25 }}
+            onClick={() => setMenuOpen(false)}
+          />
+          <div style={menuDropdownStyle}>
+            <Link
+              to="/admin"
+              style={menuItemStyle}
+              onClick={() => setMenuOpen(false)}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#f5f5f5'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
+            >
+              <span style={{ fontSize: '18px' }}>&#128272;</span>
+              Access Admin Dashboard
+            </Link>
+            <Link
+              to="/support"
+              style={{ ...menuItemStyle, borderBottom: 'none' }}
+              onClick={() => setMenuOpen(false)}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#f5f5f5'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
+            >
+              <span style={{ fontSize: '18px' }}>&#128172;</span>
+              Chat / Support
+            </Link>
+          </div>
+        </>
+      )}
 
       <img
         src="/logo.png"
