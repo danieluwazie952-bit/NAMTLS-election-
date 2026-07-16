@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function StudentLogin() {
   const [authMode, setAuthMode] = useState('signup');
@@ -13,7 +13,6 @@ export default function StudentLogin() {
     setTimeout(() => setMessage({ type: '', text: '' }), 5000);
   };
 
-  // Validate CMOS/XXXXX/XXXX format (e.g. CMOS/13865/2024)
   const isValidMatric = (matric) => {
     const regex = /^CMOS\/\d{5}\/\d{4}$/i;
     return regex.test(matric.trim());
@@ -138,10 +137,10 @@ export default function StudentLogin() {
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
-        <h1 style={{ textAlign: 'center', color: '#003366', marginBottom: '4px' }}>
+        <h1 style={{ color: '#003366', textAlign: 'center', marginBottom: '4px' }}>
           {authMode === 'signup' ? 'Student Registration' : 'Student Login'}
         </h1>
-        <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px', fontSize: '14px' }}>
+        <p style={{ textAlign: 'center', color: '#666', fontSize: '14px', marginBottom: '20px' }}>
           {authMode === 'signup' ? 'Create account to continue' : 'Login with your Matric Number'}
         </p>
 
@@ -149,56 +148,33 @@ export default function StudentLogin() {
 
         {authMode === 'signup' ? (
           <div>
-            <input
-              placeholder="Full Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              style={inputStyle}
-            />
-            <input
-              placeholder="Matric Number (e.g. CMOS/13865/2024)"
-              value={form.matric}
-              onChange={(e) => setForm({ ...form, matric: e.target.value })}
-              style={inputStyle}
-            />
-            <input
-              placeholder="Level (e.g. 200, 300, 400)"
-              value={form.level}
-              onChange={(e) => setForm({ ...form, level: e.target.value })}
-              style={inputStyle}
-            />
-            <button onClick={handleSignup} style={btnStyle}>
-              Register
-            </button>
-            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#666' }}>
+            <input placeholder="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} style={inputStyle} />
+            <input placeholder="Matric Number (CMOS/XXXXX/XXXX)" value={form.matric} onChange={(e) => setForm({ ...form, matric: e.target.value })} style={inputStyle} />
+            <input placeholder="Level (e.g. 200, 300, 400)" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} style={inputStyle} />
+            <button onClick={handleSignup} style={btnStyle}>Register</button>
+            <p style={{ textAlign: 'center', marginTop: '12px', fontSize: '14px' }}>
               Already have an account?{' '}
-              <button onClick={() => { setAuthMode('login'); setMessage({ type: '', text: '' }); }} style={linkBtnStyle}>
-                Login
-              </button>
+              <button onClick={() => { setAuthMode('login'); setMessage({ type: '', text: '' }); }} style={linkBtnStyle}>Login</button>
             </p>
           </div>
         ) : (
           <div>
             <input
-              placeholder="Matric Number (e.g. CMOS/13865/2024)"
+              placeholder="Matric Number (CMOS/XXXXX/XXXX)"
               value={loginForm.matric}
               onChange={(e) => setLoginForm({ ...loginForm, matric: e.target.value })}
               style={{ ...inputStyle, marginBottom: '16px' }}
             />
-            <button onClick={handleLogin} style={btnStyle}>
-              Login
-            </button>
-            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '14px', color: '#666' }}>
+            <button onClick={handleLogin} style={btnStyle}>Login</button>
+            <p style={{ textAlign: 'center', marginTop: '12px', fontSize: '14px' }}>
               Don't have an account?{' '}
-              <button onClick={() => { setAuthMode('signup'); setMessage({ type: '', text: '' }); }} style={linkBtnStyle}>
-                Register
-              </button>
+              <button onClick={() => { setAuthMode('signup'); setMessage({ type: '', text: '' }); }} style={linkBtnStyle}>Register</button>
             </p>
           </div>
         )}
 
-        <div style={{ textAlign: 'center', marginTop: '12px' }}>
-          <a href="#/" style={{ color: '#2563eb', fontSize: '13px' }}>Back to Home</a>
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <Link to="/" style={{ color: '#2563eb', fontSize: '14px' }}>Back to Home</Link>
         </div>
       </div>
     </div>
