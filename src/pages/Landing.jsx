@@ -13,7 +13,6 @@ export default function Landing() {
       fontFamily: 'Arial, sans-serif',
       position: 'relative'
     }}>
-      {/* PLUS SIGN FOR ADMIN - TOP LEFT */}
       <Link to="/admin" style={{
         position: 'absolute',
         top: '20px',
@@ -33,9 +32,7 @@ export default function Landing() {
         +
       </Link>
 
-      {/* CENTER CONTENT */}
       <div style={{ textAlign: 'center' }}>
-        {/* LOGO */}
         <img
           src="/logo.png"
           alt="NAMTLS Logo"
@@ -54,7 +51,6 @@ export default function Landing() {
           }}
         />
 
-        {/* TITLE */}
         <h1 style={{
           color: '#FFD700',
           fontSize: '32px',
@@ -74,7 +70,6 @@ export default function Landing() {
           National Association of Maritime Transport and Logistics Students
         </p>
 
-        {/* STUDENT LOGIN BUTTON ONLY */}
         <Link to="/student-login" style={{
           display: 'inline-block',
           padding: '16px 48px',
@@ -102,7 +97,6 @@ export default function Landing() {
         </Link>
       </div>
 
-      {/* FOOTER */}
       <p style={{
         position: 'absolute',
         bottom: '16px',
