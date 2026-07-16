@@ -5,7 +5,8 @@ import StudentLogin from './pages/StudentLogin';
 import StudentDashboard from './pages/StudentDashboard';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
-import Watermark from './components/Watermark';
+import Support from './pages/Support';
+import { DataChargeProvider } from './context/DataChargeContext';
 
 function LoadingScreen() {
   return (
@@ -28,7 +29,7 @@ function LoadingScreen() {
         animation: 'spin 1s linear infinite',
         marginBottom: '16px'
       }}></div>
-      <p>Loading NAMATL E-Voting Portal...</p>
+      <p>Loading NAMATL E-Voting Portal v2.0...</p>
     </div>
   );
 }
@@ -75,17 +76,17 @@ function App() {
   if (loading) return <LoadingScreen />;
 
   return (
-    <>
-      <Watermark />
+    <DataChargeProvider>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/student-login" element={<StudentLogin />} />
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/support" element={<Support />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </>
+    </DataChargeProvider>
   );
 }
 
