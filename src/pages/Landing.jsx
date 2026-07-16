@@ -1,3 +1,4 @@
+// NAMTLS Landing v2.0.1 - FORCE UPDATE 2026-07-16
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -38,13 +39,12 @@ export default function Landing() {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    textDecoration: 'none',
     border: '2px solid #FFD700',
-    transition: 'all 0.3s ease',
     cursor: 'pointer',
     zIndex: 20,
     gap: '4px',
-    padding: '10px'
+    padding: '10px',
+    transition: 'background 0.3s ease'
   };
 
   const dotStyle = {
@@ -104,8 +104,7 @@ export default function Landing() {
     boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
     zIndex: 30,
     minWidth: '220px',
-    overflow: 'hidden',
-    animation: 'fadeIn 0.2s ease-out'
+    overflow: 'hidden'
   };
 
   const menuItemStyle = {
@@ -118,13 +117,13 @@ export default function Landing() {
     fontSize: '15px',
     fontWeight: '500',
     borderBottom: '1px solid #f0f0f0',
-    transition: 'background 0.2s',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    transition: 'background 0.2s'
   };
 
   return (
     <div style={containerStyle}>
-      {/* 3-dots menu button */}
+      {/* 3-dots menu */}
       <div
         style={menuBtnStyle}
         onClick={() => setMenuOpen(!menuOpen)}
@@ -137,7 +136,6 @@ export default function Landing() {
         <span style={dotStyle}></span>
       </div>
 
-      {/* Dropdown menu */}
       {menuOpen && (
         <>
           <div
