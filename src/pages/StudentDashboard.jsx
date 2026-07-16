@@ -15,7 +15,6 @@ export default function StudentDashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Get student from localStorage
         const savedStudent = JSON.parse(localStorage.getItem('studentInfo'));
         if (!savedStudent) {
           setError('No student data. Please Login.');
@@ -24,25 +23,20 @@ export default function StudentDashboard() {
         }
         setStudent(savedStudent);
 
-        // Get candidates from localStorage
         const savedCandidates = JSON.parse(localStorage.getItem('candidates')) || [];
         setCandidates(savedCandidates);
 
-        // GET ELECTION SETTINGS FROM FIREBASE (source of truth)
         try {
           const settingsSnap = await getDoc(doc(db, 'settings', 'main'));
           if (settingsSnap.exists()) {
             const fbSettings = settingsSnap.data();
             setSettings(fbSettings);
-            // Also sync to localStorage for offline fallback
             localStorage.setItem('electionSettings', JSON.stringify(fbSettings));
           } else {
-            // Fallback to localStorage
             const savedSettings = JSON.parse(localStorage.getItem('electionSettings')) || {};
             setSettings(savedSettings);
           }
         } catch (e) {
-          // Firebase failed, fallback to localStorage
           const savedSettings = JSON.parse(localStorage.getItem('electionSettings')) || {};
           setSettings(savedSettings);
         }
@@ -99,8 +93,6 @@ export default function StudentDashboard() {
   };
 
   const badge = getStatusBadge();
-
-  // Group candidates by position
   const grouped = {};
   candidates.forEach(c => {
     if (!grouped[c.position]) grouped[c.position] = [];
@@ -108,7 +100,6 @@ export default function StudentDashboard() {
   });
   const positions = Object.keys(grouped);
 
-  // Error state
   if (error) {
     return (
       <div style={{
@@ -142,7 +133,6 @@ export default function StudentDashboard() {
     );
   }
 
-  // Loading state
   if (loading) {
     return (
       <div style={{
@@ -159,7 +149,6 @@ export default function StudentDashboard() {
     );
   }
 
-  // Not logged in
   if (!student) {
     return (
       <div style={{
@@ -201,7 +190,6 @@ export default function StudentDashboard() {
         color: 'white',
         fontFamily: 'Arial, sans-serif'
       }}>
-        {/* Header with Logout */}
         <div style={{
           background: '#001a33',
           padding: '12px 24px',
@@ -229,7 +217,6 @@ export default function StudentDashboard() {
           </button>
         </div>
 
-        {/* Coming Soon Content */}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -284,7 +271,6 @@ export default function StudentDashboard() {
       background: '#f0f2f5',
       fontFamily: 'Arial, sans-serif'
     }}>
-      {/* Header */}
       <div style={{
         background: '#003366',
         padding: '12px 24px',
@@ -314,7 +300,6 @@ export default function StudentDashboard() {
         </button>
       </div>
 
-      {/* Student Info Bar */}
       <div style={{
         background: 'white',
         padding: '16px 24px',
@@ -352,7 +337,6 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Voting Content */}
       <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
         {hasVoted ? (
           <div style={{
