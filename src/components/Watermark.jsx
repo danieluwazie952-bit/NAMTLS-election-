@@ -6,18 +6,10 @@ export default function Watermark() {
   }, []);
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: '8px',
-      right: '8px',
-      opacity: 0.15,
-      zIndex: 0,
-      pointerEvents: 'none'
-    }}>
+    <div style={{ display: 'none' }}>
       <img
-        src="https://namtls-election-qatt.vercel.app/logo.png"
+        src="/logo.png"
         alt="NAMATLS Watermark"
-        style={{ width: '60px', height: '60px', objectFit: 'contain' }}
         onError={(e) => {
           e.target.style.display = 'none';
           console.warn('LOGO_LOADED: Watermark image failed to load');
