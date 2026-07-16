@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -59,23 +59,11 @@ export default function AdminLogin() {
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
-        <h2 style={{ margin: '0 0 4px 0', color: '#003366', textAlign: 'center' }}>Admin Login</h2>
-        <p style={{ margin: '0 0 20px 0', color: '#666', textAlign: 'center', fontSize: '13px' }}>
-          Authorized personnel only
-        </p>
+        <h2 style={{ color: '#003366', textAlign: 'center', marginBottom: '4px' }}>Admin Login</h2>
+        <p style={{ textAlign: 'center', color: '#666', fontSize: '14px', marginBottom: '20px' }}>Authorized personnel only</p>
 
         {error && (
-          <div style={{
-            padding: '10px',
-            background: '#fee2e2',
-            color: '#dc2626',
-            borderRadius: '4px',
-            marginBottom: '12px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            border: '1px solid #fecaca'
-          }}>
+          <div style={{ padding: '10px', background: '#fee2e2', color: '#dc2626', borderRadius: '4px', marginBottom: '12px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>
             {error}
           </div>
         )}
@@ -96,13 +84,11 @@ export default function AdminLogin() {
             style={inputStyle}
             required
           />
-          <button type="submit" style={btnStyle}>
-            Login
-          </button>
+          <button type="submit" style={btnStyle}>Login</button>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '16px' }}>
-          <a href="#/" style={{ color: '#2563eb', fontSize: '13px' }}>Back to Home</a>
+          <Link to="/" style={{ color: '#2563eb', fontSize: '14px' }}>Back to Home</Link>
         </div>
       </div>
     </div>
