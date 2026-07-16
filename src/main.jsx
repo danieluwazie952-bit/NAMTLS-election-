@@ -4,9 +4,9 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 
-var rootElement = document.getElementById('root');
+const rootElement = document.getElementById('root');
 if (rootElement) {
-  var root = createRoot(rootElement);
+  const root = createRoot(rootElement);
   root.render(
     <StrictMode>
       <HashRouter>
