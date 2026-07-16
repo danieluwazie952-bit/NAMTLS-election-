@@ -1,89 +1,114 @@
 import { Link } from 'react-router-dom';
 
 export default function Landing() {
+  const containerStyle = {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #003366 0%, #004080 50%, #003366 100%)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: 'Arial, sans-serif',
+    position: 'relative',
+    padding: '20px'
+  };
+
+  const logoStyle = {
+    width: '120px',
+    height: '120px',
+    borderRadius: '50%',
+    objectFit: 'cover',
+    border: '4px solid #FFD700',
+    boxShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
+    marginBottom: '20px'
+  };
+
+  const plusStyle = {
+    position: 'absolute',
+    top: '20px',
+    left: '20px',
+    width: '48px',
+    height: '48px',
+    background: 'rgba(255, 215, 0, 0.15)',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textDecoration: 'none',
+    fontSize: '28px',
+    fontWeight: 'bold',
+    color: '#FFD700',
+    border: '2px solid #FFD700',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+    zIndex: 10
+  };
+
+  const titleStyle = {
+    fontSize: '2.2rem',
+    fontWeight: 'bold',
+    color: '#FFD700',
+    textAlign: 'center',
+    marginBottom: '8px',
+    textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+    letterSpacing: '1px'
+  };
+
+  const subtitleStyle = {
+    fontSize: '1rem',
+    color: '#e0e0e0',
+    textAlign: 'center',
+    marginBottom: '40px',
+    opacity: 0.9
+  };
+
+  const buttonStyle = {
+    padding: '16px 48px',
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    color: '#003366',
+    background: 'linear-gradient(135deg, #FFD700, #FFC000)',
+    border: 'none',
+    borderRadius: '50px',
+    cursor: 'pointer',
+    textDecoration: 'none',
+    boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
+    transition: 'all 0.3s ease',
+    letterSpacing: '0.5px'
+  };
+
+  const footerStyle = {
+    position: 'absolute',
+    bottom: '20px',
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: '0.8rem'
+  };
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #003366 0%, #001a33 100%)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      fontFamily: 'Arial, sans-serif',
-      position: 'relative'
-    }}>
-      <Link to="/admin" style={{
-        position: 'absolute',
-        top: '20px',
-        left: '24px',
-        color: '#FFD700',
-        textDecoration: 'none',
-        fontSize: '36px',
-        fontWeight: 'bold',
-        cursor: 'pointer',
-        lineHeight: '1',
-        transition: 'transform 0.2s ease'
-      }}
-      onMouseEnter={(e) => e.target.style.transform = 'scale(1.2)'}
-      onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-      title="Admin Login"
+    <div style={containerStyle}>
+      <Link
+        to="/admin"
+        style={plusStyle}
+        onMouseEnter={(e) => { e.target.style.transform = 'scale(1.2)'; e.target.style.background = 'rgba(255, 215, 0, 0.3)'; }}
+        onMouseLeave={(e) => { e.target.style.transform = 'scale(1)'; e.target.style.background = 'rgba(255, 215, 0, 0.15)'; }}
+        title="Admin Login"
       >
         +
       </Link>
 
-      <div style={{ textAlign: 'center' }}>
-        <img
-          src="/logo.png"
-          alt="NAMTLS Logo"
-          style={{
-            width: '140px',
-            height: '140px',
-            objectFit: 'contain',
-            marginBottom: '24px',
-            borderRadius: '50%',
-            border: '4px solid #FFD700',
-            padding: '8px',
-            background: 'white'
-          }}
-          onError={(e) => {
-            e.target.style.display = 'none';
-          }}
-        />
+      <img
+        src="/logo.png"
+        alt="NAMTLS Logo"
+        style={logoStyle}
+        onError={(e) => { e.target.style.display = 'none'; }}
+      />
 
-        <h1 style={{
-          color: '#FFD700',
-          fontSize: '32px',
-          fontWeight: 'bold',
-          margin: '0 0 8px 0',
-          textTransform: 'uppercase',
-          letterSpacing: '2px'
-        }}>
-          NAMATL STUDENT E-VOTING
-        </h1>
+      <h1 style={titleStyle}>NAMATL STUDENT E-VOTING</h1>
+      <p style={subtitleStyle}>National Association of Maritime Transport and Logistics Students</p>
 
-        <p style={{
-          color: '#cccccc',
-          fontSize: '14px',
-          margin: '0 0 40px 0'
-        }}>
-          National Association of Maritime Transport and Logistics Students
-        </p>
-
-        <Link to="/student-login" style={{
-          display: 'inline-block',
-          padding: '16px 48px',
-          background: '#FFD700',
-          color: '#003366',
-          textDecoration: 'none',
-          borderRadius: '8px',
-          fontWeight: 'bold',
-          fontSize: '18px',
-          cursor: 'pointer',
-          border: 'none',
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
-        }}
+      <Link
+        to="/student-login"
+        style={buttonStyle}
         onMouseEnter={(e) => {
           e.target.style.transform = 'translateY(-2px)';
           e.target.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.5)';
@@ -92,20 +117,13 @@ export default function Landing() {
           e.target.style.transform = 'translateY(0)';
           e.target.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
         }}
-        >
-          Student Login
-        </Link>
-      </div>
+      >
+        Student Login
+      </Link>
 
-      <p style={{
-        position: 'absolute',
-        bottom: '16px',
-        color: '#666666',
-        fontSize: '12px',
-        margin: '0'
-      }}>
+      <div style={footerStyle}>
         &copy; {new Date().getFullYear()} NAMATLS FUPRE. All rights reserved.
-      </p>
+      </div>
     </div>
   );
 }
