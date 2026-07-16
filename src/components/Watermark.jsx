@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 export default function Watermark() {
   useEffect(() => {
-    console.log('LOGO_LOADED: Watermark rendered');
+    console.log('NAMTLS E-Voting v2.0 loaded');
   }, []);
 
   return (
@@ -12,7 +12,7 @@ export default function Watermark() {
         alt="NAMATLS Watermark"
         onError={(e) => {
           e.target.style.display = 'none';
-          console.warn('LOGO_LOADED: Watermark image failed to load');
+          console.warn('Watermark image failed to load');
         }}
       />
     </div>
