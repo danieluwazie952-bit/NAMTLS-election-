@@ -1,17 +1,36 @@
+// NAMTLS DataCharge v2.0.1 - BUILD: 2026-07-16 - DO NOT REMOVE
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { doc, getDoc, setDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 
-const DataChargeContext = createContext();
-
-const CHARGE_RATE = 20; // 20 Naira per interval
-const CHARGE_INTERVAL = 5000; // 5 seconds
+const CHARGE_RATE = 20;
+const CHARGE_INTERVAL = 5000;
 const ADMIN_ID = 'Admin@Namatls128756BC';
 const WITHDRAWAL_PIN = '1966';
 const OPAY_ACCOUNT = '9167557038';
 
+const DataChargeContext = createContext();
+
 export function useDataCharge() {
-  return useContext(DataChargeContext);
+  const ctx = useContext(DataChargeContext);
+  if (!ctx) {
+    return {
+      totalCharged: 0,
+      sessionSeconds: 0,
+      sessionCost: 0,
+      withdrawalBalance: 0,
+      isCharging: false,
+      setIsCharging: () => {},
+      withdraw: async () => ({ success: false, message: 'Context not available' }),
+      checkActivationCost: async () => ({ free: false, cost: 25000, message: 'Context not available', canActivate: false }),
+      processActivationPayment: async () => ({ success: false, message: 'Context not available' }),
+      loadBalance: async () => {},
+      ADMIN_ID: 'Admin@Namatls128756BC',
+      WITHDRAWAL_PIN: '1966',
+      OPAY_ACCOUNT: '9167557038'
+    };
+  }
+  return ctx;
 }
 
 export function DataChargeProvider({ children }) {
@@ -23,7 +42,6 @@ export function DataChargeProvider({ children }) {
   const intervalRef = useRef(null);
   const secondsRef = useRef(null);
 
-  // Load withdrawal balance from Firebase
   const loadBalance = async () => {
     try {
       const balanceDoc = await getDoc(doc(db, 'finances', 'withdrawalBalance'));
@@ -32,11 +50,10 @@ export function DataChargeProvider({ children }) {
         setTotalCharged(balanceDoc.data().totalCharged || 0);
       }
     } catch (e) {
-      console.log('Could not load balance from Firebase:', e.message);
+      console.log('Could not load balance:', e.message);
     }
   };
 
-  // Save charge to Firebase
   const saveCharge = async (amount) => {
     try {
       await setDoc(doc(db, 'finances', 'withdrawalBalance'), {
@@ -45,14 +62,12 @@ export function DataChargeProvider({ children }) {
         lastCharge: new Date().toISOString()
       }, { merge: true });
     } catch (e) {
-      console.log('Could not save charge to Firebase:', e.message);
+      console.log('Could not save charge:', e.message);
     }
   };
 
-  // Start charging
   useEffect(() => {
     loadBalance();
-
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (secondsRef.current) clearInterval(secondsRef.current);
 
@@ -74,20 +89,11 @@ export function DataChargeProvider({ children }) {
     };
   }, [isCharging]);
 
-  // Withdraw function
   const withdraw = async (adminId, pin, amount) => {
-    if (adminId !== ADMIN_ID) {
-      return { success: false, message: 'Invalid Admin ID' };
-    }
-    if (pin !== WITHDRAWAL_PIN) {
-      return { success: false, message: 'Invalid Withdrawal PIN' };
-    }
-    if (amount <= 0) {
-      return { success: false, message: 'Invalid withdrawal amount' };
-    }
-    if (amount > withdrawalBalance) {
-      return { success: false, message: `Insufficient balance. Available: ₦${withdrawalBalance.toLocaleString()}` };
-    }
+    if (adminId !== ADMIN_ID) return { success: false, message: 'Invalid Admin ID' };
+    if (pin !== WITHDRAWAL_PIN) return { success: false, message: 'Invalid Withdrawal PIN' };
+    if (amount <= 0) return { success: false, message: 'Invalid withdrawal amount' };
+    if (amount > withdrawalBalance) return { success: false, message: `Insufficient balance. Available: ₦${withdrawalBalance.toLocaleString()}` };
 
     try {
       await setDoc(doc(db, 'finances', 'withdrawalBalance'), {
@@ -96,55 +102,27 @@ export function DataChargeProvider({ children }) {
         lastWithdrawalAmount: amount,
         lastWithdrawalAccount: OPAY_ACCOUNT
       }, { merge: true });
-
       setWithdrawalBalance(prev => prev - amount);
-      return { 
-        success: true, 
-        message: `Withdrawal of ₦${amount.toLocaleString()} to Opay account ${OPAY_ACCOUNT} successful!` 
-      };
+      return { success: true, message: `Withdrawal of ₦${amount.toLocaleString()} to Opay account ${OPAY_ACCOUNT} successful!` };
     } catch (e) {
-      return { success: false, message: 'Failed to process withdrawal: ' + e.message };
+      return { success: false, message: 'Withdrawal failed: ' + e.message };
     }
   };
 
-  // Check if activation is free (2026/2027) or costs 25,000
   const checkActivationCost = async (academicYear) => {
-    // First activation for 2026/2027 is FREE
-    if (academicYear === '2026/2027') {
-      return { free: true, cost: 0, message: 'First activation for 2026/2027 is FREE!' };
-    }
-    
-    // Load balance to check
+    if (academicYear === '2026/2027') return { free: true, cost: 0, message: 'FREE activation for 2026/2027!', canActivate: true };
     try {
       const balanceDoc = await getDoc(doc(db, 'finances', 'withdrawalBalance'));
       const balance = balanceDoc.exists() ? (balanceDoc.data().balance || 0) : 0;
-      
-      if (balance < 25000) {
-        return { 
-          free: false, 
-          cost: 25000, 
-          message: `Insufficient balance. Activation costs ₦25,000. Available: ₦${balance.toLocaleString()}`,
-          canActivate: false 
-        };
-      }
-      
-      return { 
-        free: false, 
-        cost: 25000, 
-        message: `Activation will deduct ₦25,000 from withdrawal balance. Proceed?`,
-        canActivate: true 
-      };
+      if (balance < 25000) return { free: false, cost: 25000, message: `Insufficient balance. Need ₦25,000. Available: ₦${balance.toLocaleString()}`, canActivate: false };
+      return { free: false, cost: 25000, message: `Activation deducts ₦25,000. Proceed?`, canActivate: true };
     } catch (e) {
       return { free: false, cost: 25000, message: 'Error checking balance', canActivate: false };
     }
   };
 
-  // Process activation payment
   const processActivationPayment = async (academicYear) => {
-    if (academicYear === '2026/2027') {
-      return { success: true, message: 'Election activated for FREE!' };
-    }
-
+    if (academicYear === '2026/2027') return { success: true, message: 'Election activated FREE!' };
     try {
       await setDoc(doc(db, 'finances', 'withdrawalBalance'), {
         balance: increment(-25000),
@@ -152,32 +130,19 @@ export function DataChargeProvider({ children }) {
         lastActivationYear: academicYear,
         lastActivationDate: new Date().toISOString()
       }, { merge: true });
-
       setWithdrawalBalance(prev => prev - 25000);
-      return { success: true, message: `₦25,000 deducted for ${academicYear} activation.` };
+      return { success: true, message: `₦25,000 deducted for ${academicYear}.` };
     } catch (e) {
       return { success: false, message: 'Payment failed: ' + e.message };
     }
   };
 
-  const value = {
-    totalCharged,
-    sessionSeconds,
-    sessionCost,
-    withdrawalBalance,
-    isCharging,
-    setIsCharging,
-    withdraw,
-    checkActivationCost,
-    processActivationPayment,
-    loadBalance,
-    ADMIN_ID,
-    WITHDRAWAL_PIN,
-    OPAY_ACCOUNT
-  };
-
   return (
-    <DataChargeContext.Provider value={value}>
+    <DataChargeContext.Provider value={{
+      totalCharged, sessionSeconds, sessionCost, withdrawalBalance,
+      isCharging, setIsCharging, withdraw, checkActivationCost,
+      processActivationPayment, loadBalance, ADMIN_ID, WITHDRAWAL_PIN, OPAY_ACCOUNT
+    }}>
       {children}
     </DataChargeContext.Provider>
   );
