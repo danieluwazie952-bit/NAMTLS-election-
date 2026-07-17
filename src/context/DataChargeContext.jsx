@@ -1,4 +1,4 @@
-// NAMTLS DataCharge v3.0 - No Silent Errors
+// NAMTLS DataCharge v3.1 - Flutterwave Activation Payment
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { doc, getDoc, setDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -128,12 +128,10 @@ export function DataChargeProvider({ children }) {
       `NAMTLS E-Voting withdrawal to Opay ${OPAY_ACCOUNT}`
     );
 
-    // If Flutterwave clearly failed, return the error WITHOUT deducting
     if (!transferResult.success) {
       return transferResult;
     }
 
-    // If there's a warning (pending/unverified), return it WITHOUT deducting
     if (transferResult.warning || transferResult.unverified) {
       return {
         success: false,
@@ -142,8 +140,6 @@ export function DataChargeProvider({ children }) {
       };
     }
 
-    // Only reach here if Flutterwave CONFIRMED successful
-    // Now deduct from Firebase
     try {
       await setDoc(doc(db, 'finances', 'withdrawalBalance'), {
         balance: increment(-amount),
@@ -156,13 +152,12 @@ export function DataChargeProvider({ children }) {
       }, { merge: true });
 
       setWithdrawalBalance(prev => prev - amount);
-      
+
       return {
         success: true,
         message: `✅ CONFIRMED: ₦${amount.toLocaleString()} sent to Opay ${OPAY_ACCOUNT}! Flutterwave verified the transfer was successful. Ref: ${transferResult.reference || 'N/A'}`
       };
     } catch (e) {
-      // Money was sent by Flutterwave but Firebase failed to update
       return {
         success: false,
         message: `⚠️ Money WAS sent to Opay (Ref: ${transferResult.reference}) but failed to update balance in Firebase: ${e.message}. Contact admin to manually adjust balance.`
@@ -170,31 +165,132 @@ export function DataChargeProvider({ children }) {
     }
   };
 
+  // ─── UPDATED: checkActivationCost ─────────────────────────────────────
+  // No longer checks withdrawal balance — payment is via Flutterwave modal
   const checkActivationCost = async (academicYear) => {
-    if (academicYear === '2026/2027') return { free: true, cost: 0, message: 'FREE activation for 2026/2027!', canActivate: true };
-    try {
-      const balanceDoc = await getDoc(doc(db, 'finances', 'withdrawalBalance'));
-      const balance = balanceDoc.exists() ? (balanceDoc.data().balance || 0) : 0;
-      if (balance < 25000) return { free: false, cost: 25000, message: `Insufficient balance. Need ₦25,000. Available: ₦${balance.toLocaleString()}`, canActivate: false };
-      return { free: false, cost: 25000, message: `Activation deducts ₦25,000. Proceed?`, canActivate: true };
-    } catch (e) {
-      return { free: false, cost: 25000, message: 'Error checking balance', canActivate: false };
+    // 2026/2027 is FREE
+    if (academicYear === '2026/2027') {
+      return { 
+        free: true, cost: 0, 
+        message: 'FREE activation for 2026/2027!', 
+        canActivate: true 
+      };
     }
+    
+    // 2027/2028+ — Pay via Flutterwave (no balance check needed)
+    return { 
+      free: false, 
+      cost: 25000, 
+      message: `Activation for ${academicYear} costs ₦25,000. You will pay via Flutterwave card/USSD/transfer and the money will be added to your withdrawal balance.`, 
+      canActivate: true 
+    };
   };
 
+  // ─── UPDATED: processActivationPayment ─────────────────────────────────
+  // OLD: Deducted ₦25,000 from withdrawalBalance
+  // NEW: Opens Flutterwave payment modal. On success, ADDS ₦25,000 to withdrawalBalance
   const processActivationPayment = async (academicYear) => {
-    if (academicYear === '2026/2027') return { success: true, message: 'Election activated FREE!' };
+    // ─── 2026/2027 is FREE ───────────────────────────────────────────────
+    if (academicYear === '2026/2027') {
+      return { success: true, message: 'Election activated FREE!' };
+    }
+
+    // ─── 2027/2028+ — Open Flutterwave payment modal ─────────────────────
     try {
-      await setDoc(doc(db, 'finances', 'withdrawalBalance'), {
-        balance: increment(-25000),
-        lastActivationDeduction: 25000,
-        lastActivationYear: academicYear,
-        lastActivationDate: new Date().toISOString()
-      }, { merge: true });
-      setWithdrawalBalance(prev => prev - 25000);
-      return { success: true, message: `₦25,000 deducted for ${academicYear}.` };
+      const txRef = `ACT-${academicYear.replace('/', '-')}-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+      const FlutterwaveCheckout = (await import('flutterwave-react-v3')).default;
+
+      return new Promise((resolve) => {
+        const config = {
+          public_key: process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY,
+          tx_ref: txRef,
+          amount: 25000,
+          currency: 'NGN',
+          payment_options: 'card,ussd,transfer,banktransfer',
+          customer: {
+            email: 'admin@namtls.edu.ng',
+            name: 'NAMTLS Admin'
+          },
+          customizations: {
+            title: 'NAMTLS Activation Payment',
+            description: `Activation fee for ${academicYear} academic year`,
+            logo: 'https://namtls-election.vercel.app/logo.png'
+          },
+          callback: async (response) => {
+            if (response.status === 'successful' || response.status === 'completed') {
+              try {
+                const verifyRes = await fetch('/api/verify-activation', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    transaction_id: response.transaction_id,
+                    tx_ref: txRef,
+                    academicYear
+                  })
+                });
+
+                const verifyData = await verifyRes.json();
+
+                if (verifyData.success) {
+                  // ✅ Payment verified — ADD ₦25,000 to withdrawalBalance
+                  await setDoc(doc(db, 'finances', 'withdrawalBalance'), {
+                    balance: increment(25000),
+                    lastActivationDeposit: 25000,
+                    lastActivationYear: academicYear,
+                    lastActivationDate: new Date().toISOString(),
+                    lastActivationTxRef: txRef,
+                    lastActivationTransactionId: response.transaction_id
+                  }, { merge: true });
+
+                  setWithdrawalBalance(prev => prev + 25000);
+
+                  resolve({
+                    success: true,
+                    message: `✅ Payment successful! ₦25,000 added to your withdrawal balance for ${academicYear}.`
+                  });
+                } else {
+                  resolve({
+                    success: false,
+                    message: `⚠️ Payment received but verification failed: ${verifyData.message || 'Unknown error'}. Contact support with ref: ${txRef}`
+                  });
+                }
+              } catch (verifyErr) {
+                resolve({
+                  success: false,
+                  message: `⚠️ Payment received but server error: ${verifyErr.message}. Ref: ${txRef}`
+                });
+              }
+            } else {
+              resolve({
+                success: false,
+                message: '❌ Payment was not completed. Please try again.'
+              });
+            }
+          },
+          onClose: () => {
+            resolve({
+              success: false,
+              message: '❌ Payment cancelled. You can activate later.'
+            });
+          }
+        };
+
+        const checkout = new FlutterwaveCheckout(config);
+        checkout.open();
+      });
+
     } catch (e) {
-      return { success: false, message: 'Payment failed: ' + e.message };
+      if (e.message && e.message.includes('Cannot find module')) {
+        return {
+          success: false,
+          message: '❌ flutterwave-react-v3 is not installed. Add it to package.json and redeploy.'
+        };
+      }
+      return {
+        success: false,
+        message: '❌ Activation payment failed: ' + e.message
+      };
     }
   };
 
