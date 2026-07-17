@@ -1,4 +1,4 @@
-// NAMTLS Withdrawal API v3.0 - No Silent Errors - Real Verification
+// NAMTLS Withdrawal API v3.1 - Waits For Flutterwave Real Status
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
@@ -22,10 +22,9 @@ export default async function handler(req, res) {
     const FLUTTERWAVE_SECRET = process.env.FLUTTERWAVE_SECRET_KEY;
 
     if (!FLUTTERWAVE_SECRET) {
-      return res.status(500).json({ success: false, message: '❌ FLUTTERWAVE_SECRET_KEY not set in Vercel environment variables. Go to Vercel > Settings > Environment Variables and add it.' });
+      return res.status(500).json({ success: false, message: '❌ FLUTTERWAVE_SECRET_KEY not set in Vercel environment variables.' });
     }
 
-    // Validate amount
     if (Number(amount) < 100) {
       return res.status(400).json({ success: false, message: '❌ Minimum withdrawal is ₦100' });
     }
@@ -34,15 +33,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: '❌ Maximum withdrawal is ₦1,000,000' });
     }
 
-    // OPay bank code for Flutterwave v3 transfers = 100004
     const OPAY_BANK_CODE = '100004';
-
-    // Generate a unique reference
     const reference = `NAMTLS-WD-${Date.now()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
 
-    console.log(`[NAMTLS] Initiating transfer: ₦${amount} to ${accountNumber} (${OPAY_BANK_CODE})`);
+    console.log(`[NAMTLS] Initiating transfer: ₦${amount} to ${accountNumber}`);
 
-    // STEP 1: Submit the transfer to Flutterwave
+    // STEP 1: Submit transfer to Flutterwave
     const transferResponse = await fetch('https://api.flutterwave.com/v3/transfers', {
       method: 'POST',
       headers: {
@@ -61,108 +57,99 @@ export default async function handler(req, res) {
     });
 
     const transferData = await transferResponse.json();
-    console.log('[NAMTLS] Flutterwave transfer response:', JSON.stringify(transferData, null, 2));
+    console.log('[NAMTLS] Submit response:', JSON.stringify(transferData, null, 2));
 
-    // STEP 2: Check if Flutterwave actually accepted it
     if (transferData.status !== 'success') {
       let errorMsg = transferData.message || 'Unknown Flutterwave error';
-      // Check for specific known errors
-      if (transferData.data?.complete_message) {
-        errorMsg = transferData.data.complete_message;
-      }
-      if (transferData.data?.note) {
-        errorMsg = transferData.data.note;
-      }
-      // Check for insufficient balance or transfer limit errors
-      if (errorMsg.toLowerCase().includes('insufficient') || errorMsg.toLowerCase().includes('balance')) {
-        return res.status(400).json({
-          success: false,
-          message: `❌ Flutterwave: Insufficient balance in your Flutterwave account. Fund your Flutterwave wallet and try again. Details: ${errorMsg}`,
-          flutterwaveFullResponse: transferData
-        });
-      }
-      if (errorMsg.toLowerCase().includes('kyc') || errorMsg.toLowerCase().includes('limit')) {
-        return res.status(400).json({
-          success: false,
-          message: `❌ Flutterwave: Your account has KYC or transfer limit restrictions. Log into dashboard.flutterwave.com and complete KYC Level 2. Details: ${errorMsg}`,
-          flutterwaveFullResponse: transferData
-        });
-      }
-      return res.status(400).json({
-        success: false,
-        message: `❌ Flutterwave rejected the transfer: ${errorMsg}`,
-        flutterwaveFullResponse: transferData
+      if (transferData.data?.complete_message) errorMsg = transferData.data.complete_message;
+      if (transferData.data?.note) errorMsg = transferData.data.note;
+      return res.status(400).json({ success: false, message: `❌ Flutterwave rejected the transfer: ${errorMsg}`, flutterwaveFullResponse: transferData });
+    }
+
+    const transferId = transferData.data?.id;
+    if (!transferId) {
+      return res.status(200).json({
+        success: true,
+        unverified: true,
+        message: `⚠️ Flutterwave accepted (Ref: ${reference}) but no transfer ID returned. Check Flutterwave dashboard > Transactions > Transfers.`,
+        reference: reference
       });
     }
 
-    // STEP 3: Flutterwave accepted. Now VERIFY the transfer status by querying it back
-    const transferId = transferData.data?.id;
-    if (transferId) {
-      // Wait 3 seconds for Flutterwave to process
+    // STEP 2: KEEP POLLING until Flutterwave gives a final status (up to 30 seconds)
+    let finalStatus = '';
+    let finalData = null;
+    let attempts = 0;
+    const maxAttempts = 10; // 10 attempts x 3 seconds = 30 seconds max wait
+
+    while (attempts < maxAttempts) {
+      attempts++;
+      // Wait 3 seconds between checks
       await new Promise(resolve => setTimeout(resolve, 3000));
 
-      // Query the transfer status
-      const verifyResponse = await fetch(`https://api.flutterwave.com/v3/transfers/${transferId}`, {
-        headers: {
-          'Authorization': `Bearer ${FLUTTERWAVE_SECRET}`
+      try {
+        const verifyResponse = await fetch(`https://api.flutterwave.com/v3/transfers/${transferId}`, {
+          headers: { 'Authorization': `Bearer ${FLUTTERWAVE_SECRET}` }
+        });
+        const verifyData = await verifyResponse.json();
+        finalData = verifyData;
+        finalStatus = verifyData.data?.status || '';
+
+        console.log(`[NAMTLS] Poll attempt ${attempts}/${maxAttempts}: status = ${finalStatus}`);
+
+        if (finalStatus === 'successful') {
+          // MONEY SENT - confirmed by Flutterwave
+          return res.status(200).json({
+            success: true,
+            verified: true,
+            message: `✅ CONFIRMED: ₦${Number(amount).toLocaleString()} successfully sent to Opay ${accountNumber}! Flutterwave confirmed status: SUCCESSFUL. Ref: ${reference}`,
+            reference: reference,
+            flutterwaveId: transferId,
+            status: 'successful'
+          });
         }
-      });
-      const verifyData = await verifyResponse.json();
-      console.log('[NAMTLS] Flutterwave verification response:', JSON.stringify(verifyData, null, 2));
 
-      const transferStatus = verifyData.data?.status || '';
-      
-      // If Flutterwave says it failed, report the truth
-      if (transferStatus === 'failed') {
-        const failReason = verifyData.data?.complete_message || verifyData.data?.note || 'No reason provided by Flutterwave';
-        return res.status(400).json({
-          success: false,
-          message: `❌ Flutterwave PROCESSED but REJECTED the transfer. Status: FAILED. Reason: ${failReason}. The money was NOT sent to Opay. Check your Flutterwave dashboard > Transactions > Transfers for details.`,
-          flutterwaveFullResponse: verifyData,
-          reference: reference
-        });
-      }
+        if (finalStatus === 'failed') {
+          // MONEY NOT SENT - Flutterwave rejected it after processing
+          const failReason = finalData.data?.complete_message || finalData.data?.note || 'No reason provided';
+          return res.status(400).json({
+            success: false,
+            message: `❌ Flutterwave PROCESSED but REJECTED the transfer. Status: FAILED. Reason: ${failReason}. Money was NOT sent to Opay.`,
+            flutterwaveFullResponse: finalData,
+            reference: reference
+          });
+        }
 
-      // If still pending, warn the user
-      if (transferStatus === 'pending' || transferStatus === 'processing') {
-        return res.status(200).json({
-          success: true,
-          warning: true,
-          message: `⚠️ Transfer SUBMITTED to Flutterwave but is still ${transferStatus}. It may take 5-30 minutes to reach your Opay. Check Flutterwave dashboard > Transactions > Transfers. Reference: ${reference}`,
-          reference: reference,
-          flutterwaveId: transferId,
-          status: transferStatus
-        });
-      }
+        // If still pending/processing/queued, keep polling
+        if (finalStatus === 'pending' || finalStatus === 'processing' || finalStatus === 'queued') {
+          continue; // Try again
+        }
 
-      // If successful, confirm it
-      if (transferStatus === 'successful') {
-        return res.status(200).json({
-          success: true,
-          verified: true,
-          message: `✅ CONFIRMED: ₦${Number(amount).toLocaleString()} sent to Opay ${accountNumber}! Flutterwave confirms status: SUCCESSFUL. Ref: ${reference}`,
-          reference: reference,
-          flutterwaveId: transferId,
-          status: 'successful'
-        });
+        // Unknown status - stop and report
+        break;
+      } catch (pollError) {
+        console.log(`[NAMTLS] Poll error on attempt ${attempts}: ${pollError.message}`);
+        continue; // Network glitch, keep trying
       }
     }
 
-    // STEP 4: If we can't verify, return what we know
+    // STEP 3: After all attempts, Flutterwave still hasn't finalized
+    const flutterwaveStatusUrl = `https://dashboard.flutterwave.com/transfers/${transferId}`;
     return res.status(200).json({
       success: true,
       unverified: true,
-      message: `⚠️ Flutterwave ACCEPTED the transfer (Ref: ${reference}) but we could not confirm the final status. Check your Flutterwave dashboard > Transactions > Transfers to verify. Do NOT assume the money was sent until confirmed there.`,
+      message: `⚠️ Flutterwave ACCEPTED the transfer (Ref: ${reference}) but after ${maxAttempts * 3} seconds the status is still "${finalStatus || 'unknown'}". Flutterwave may be processing it. Check: ${flutterwaveStatusUrl}. Do NOT assume the money was sent until Flutterwave shows "Successful" there.`,
       reference: reference,
-      flutterwaveId: transferId || '',
-      flutterwaveResponse: transferData
+      flutterwaveId: transferId,
+      status: finalStatus || 'unknown',
+      flutterwaveDashboardUrl: flutterwaveStatusUrl
     });
 
   } catch (e) {
     console.error('[NAMTLS] Server error:', e.message);
     return res.status(500).json({
       success: false,
-      message: `❌ Server Error: ${e.message}. Check Vercel function logs for details.`
+      message: `❌ Server Error: ${e.message}. Check Vercel function logs.`
     });
   }
 }
