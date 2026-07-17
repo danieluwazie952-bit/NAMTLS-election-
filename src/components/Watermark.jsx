@@ -6,14 +6,19 @@ export default function Watermark() {
   }, []);
 
   return (
-    <div style={{ display: 'none' }}>
+    <div style={{
+      position: 'fixed',
+      bottom: '10px',
+      right: '10px',
+      opacity: 0.15,
+      zIndex: 9999,
+      pointerEvents: 'none'
+    }}>
       <img
         src="/logo.png"
         alt="NAMATLS Watermark"
-        onError={(e) => {
-          e.target.style.display = 'none';
-          console.warn('Watermark image failed to load');
-        }}
+        style={{ width: '80px', height: '80px', borderRadius: '50%' }}
+        onError={(e) => { e.target.style.display = 'none'; console.warn('Watermark image failed to load'); }}
       />
     </div>
   );
