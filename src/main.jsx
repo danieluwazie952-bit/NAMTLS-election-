@@ -14,7 +14,7 @@ if (rootElement) {
       </HashRouter>
     </StrictMode>
   );
-  console.log('NAMTLS E-Voting System v2.0 mounted');
+  console.log('NAMTLS E-Voting System v2.0.2 mounted');
 } else {
   document.body.innerHTML = '<h1>FATAL: root element missing</h1>';
 }
