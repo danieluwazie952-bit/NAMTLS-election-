@@ -30,7 +30,7 @@ function LoadingScreen() {
         animation: 'spin 1s linear infinite',
         marginBottom: '16px'
       }}></div>
-      <p>Loading NAMATL E-Voting Portal v2.0...</p>
+      <p>Loading NAMATL E-Voting Portal v2.0.2..</p>
     </div>
   );
 }
