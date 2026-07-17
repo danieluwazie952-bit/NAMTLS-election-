@@ -1,4 +1,4 @@
-// NAMTLS Landing v2.0.1 - FORCE UPDATE 2026-07-16
+// NAMTLS Landing v2.0.1 - FORCE UPDATE 2026-07-17
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -124,8 +124,7 @@ export default function Landing() {
   return (
     <div style={containerStyle}>
       {/* 3-dots menu */}
-      <div
-        style={menuBtnStyle}
+      <div style={menuBtnStyle}
         onClick={() => setMenuOpen(!menuOpen)}
         onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 215, 0, 0.3)'; }}
         onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 215, 0, 0.15)'; }}
@@ -138,30 +137,21 @@ export default function Landing() {
 
       {menuOpen && (
         <>
-          <div
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 25 }}
-            onClick={() => setMenuOpen(false)}
-          />
+          <div style={{ position: 'fixed', inset: 0, zIndex: 25 }} onClick={() => setMenuOpen(false)} />
           <div style={menuDropdownStyle}>
-            <Link
-              to="/admin"
-              style={menuItemStyle}
+            <Link to="/admin" style={menuItemStyle}
               onClick={() => setMenuOpen(false)}
               onMouseEnter={(e) => { e.currentTarget.style.background = '#f5f5f5'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
             >
-              <span style={{ fontSize: '18px' }}>&#128272;</span>
-              Access Admin Dashboard
+              🔐 Access Admin Dashboard
             </Link>
-            <Link
-              to="/support"
-              style={{ ...menuItemStyle, borderBottom: 'none' }}
+            <Link to="/support" style={menuItemStyle}
               onClick={() => setMenuOpen(false)}
               onMouseEnter={(e) => { e.currentTarget.style.background = '#f5f5f5'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
             >
-              <span style={{ fontSize: '18px' }}>&#128172;</span>
-              Chat / Support
+              💬 Chat / Support
             </Link>
           </div>
         </>
@@ -175,26 +165,20 @@ export default function Landing() {
       />
 
       <h1 style={titleStyle}>NAMATL STUDENT E-VOTING</h1>
-      <p style={subtitleStyle}>National Association of Maritime Transport and Logistics Students</p>
+      <p style={subtitleStyle}>
+        National Association of Maritime Transport and Logistics Students
+      </p>
 
-      <Link
-        to="/student-login"
-        style={buttonStyle}
-        onMouseEnter={(e) => {
-          e.target.style.transform = 'translateY(-2px)';
-          e.target.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.5)';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = 'translateY(0)';
-          e.target.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
-        }}
+      <Link to="/student-login" style={buttonStyle}
+        onMouseEnter={(e) => { e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.5)'; }}
+        onMouseLeave={(e) => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)'; }}
       >
         Student Login
       </Link>
 
-      <div style={footerStyle}>
+      <p style={footerStyle}>
         &copy; {new Date().getFullYear()} NAMATLS FUPRE. All rights reserved.
-      </div>
+      </p>
     </div>
   );
 }
