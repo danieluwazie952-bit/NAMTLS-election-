@@ -15,9 +15,9 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
-    "jspdf": "^2.5.1",
+    "jspdf": "^3.0.0",
     "jspdf-autotable": "^3.8.2",
-    "firebase": "^10.12.2",
+    "firebase": "^11.0.0",
     "flutterwave-react-v3": "^1.2.0"
   },
   "devDependencies": {
