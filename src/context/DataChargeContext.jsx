@@ -1,4 +1,4 @@
-// NAMTLS DataCharge v2.2 - API ROUTE INTEGRATION - 2026-07-17
+// NAMTLS DataCharge v2.3 - API ROUTE FIX - 2026-07-17
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { doc, getDoc, setDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -15,12 +15,8 @@ export function useDataCharge() {
   const ctx = useContext(DataChargeContext);
   if (!ctx) {
     return {
-      totalCharged: 0,
-      sessionSeconds: 0,
-      sessionCost: 0,
-      withdrawalBalance: 0,
-      isCharging: false,
-      setIsCharging: () => {},
+      totalCharged: 0, sessionSeconds: 0, sessionCost: 0,
+      withdrawalBalance: 0, isCharging: false, setIsCharging: () => {},
       withdraw: async () => ({ success: false, message: 'Context not available' }),
       checkActivationCost: async () => ({ free: false, cost: 25000, message: 'Context not available', canActivate: false }),
       processActivationPayment: async () => ({ success: false, message: 'Context not available' }),
@@ -34,35 +30,47 @@ export function useDataCharge() {
 }
 
 /**
- * Calls YOUR Vercel API route instead of Flutterwave directly.
- * This avoids CORS errors because the API route runs on the server.
+ * Calls YOUR Vercel API route at /api/withdraw
+ * The API route runs on the server and calls Flutterwave, so no CORS issues
  */
 async function sendFlutterwavePayout(amount, accountNumber, bankCode, narration) {
-  try {
-    const response = await fetch('/api/withdraw', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        amount,
-        accountNumber,
-        bankCode: bankCode || 'OPAY',
-        narration: narration || 'NAMTLS E-Voting Withdrawal'
-      })
-    });
+  // Try multiple possible API paths (in case of base path differences)
+  const apiPaths = ['/api/withdraw', '/api/flutterwave-withdraw'];
+  
+  for (const apiPath of apiPaths) {
+    try {
+      const response = await fetch(apiPath, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount,
+          accountNumber,
+          bankCode: bankCode || 'OPAY',
+          narration: narration || 'NAMTLS E-Voting Withdrawal'
+        })
+      });
 
-    const data = await response.json();
-    return data;
-  } catch (e) {
-    return { success: false, message: `Connection failed: ${e.message}` };
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.log(`API at ${apiPath} returned non-JSON:`, text.substring(0, 200));
+        continue; // Try next path
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (e) {
+      console.log(`API at ${apiPath} failed:`, e.message);
+      continue; // Try next path
+    }
   }
-}
 
-/**
- * Bank lookup is now handled on the server side in the API route.
- * This function just returns a default. The actual lookup happens in api/withdraw.js
- */
-async function lookupOpayBankCode() {
-  return 'OPAY';
+  // If all paths failed, return a clear error
+  return { 
+    success: false, 
+    message: 'Could not reach withdrawal API. Check that api/withdraw.js exists in your GitHub repo and vercel.json has the correct rewrite rules.' 
+  };
 }
 
 export function DataChargeProvider({ children }) {
@@ -128,20 +136,20 @@ export function DataChargeProvider({ children }) {
     if (amount <= 0) return { success: false, message: 'Invalid withdrawal amount' };
     if (amount > withdrawalBalance) return { success: false, message: `Insufficient balance. Available: ₦${withdrawalBalance.toLocaleString()}` };
 
+    // Call the API route (tries both /api/withdraw and /api/flutterwave-withdraw)
+    const transferResult = await sendFlutterwavePayout(
+      amount,
+      OPAY_ACCOUNT,
+      'OPAY',
+      `NAMTLS E-Voting withdrawal to Opay ${OPAY_ACCOUNT}`
+    );
+
+    if (!transferResult.success) {
+      return transferResult;
+    }
+
+    // Only deduct from Firebase if transfer succeeded
     try {
-      // Call YOUR Vercel API route (server-to-server, no CORS issues)
-      const transferResult = await sendFlutterwavePayout(
-        amount,
-        OPAY_ACCOUNT,
-        'OPAY',
-        `NAMTLS E-Voting withdrawal to Opay ${OPAY_ACCOUNT}`
-      );
-
-      if (!transferResult.success) {
-        return transferResult;
-      }
-
-      // Only deduct from Firebase if transfer succeeded
       await setDoc(doc(db, 'finances', 'withdrawalBalance'), {
         balance: increment(-amount),
         lastWithdrawal: new Date().toISOString(),
@@ -158,7 +166,7 @@ export function DataChargeProvider({ children }) {
         message: `✅ ₦${amount.toLocaleString()} sent to Opay account ${OPAY_ACCOUNT}! Ref: ${transferResult.reference || 'N/A'}` 
       };
     } catch (e) {
-      return { success: false, message: 'Withdrawal failed: ' + e.message };
+      return { success: false, message: 'Withdrawal failed during Firebase update: ' + e.message };
     }
   };
 
