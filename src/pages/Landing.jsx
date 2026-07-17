@@ -1,4 +1,4 @@
-// NAMTLS Landing v2.0.1 - FORCE UPDATE 2026-07-17
+// NAMTLS Landing v2.0.2 - FORCE UPDATE 2026-07-17
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -18,8 +18,8 @@ export default function Landing() {
   };
 
   const logoStyle = {
-    width: '120px',
-    height: '120px',
+    width: '100px',
+    height: '100px',
     borderRadius: '50%',
     objectFit: 'cover',
     border: '4px solid #FFD700',
@@ -29,10 +29,10 @@ export default function Landing() {
 
   const menuBtnStyle = {
     position: 'absolute',
-    top: '20px',
-    left: '20px',
-    width: '48px',
-    height: '48px',
+    top: '15px',
+    left: '15px',
+    width: '42px',
+    height: '42px',
     background: 'rgba(255, 215, 0, 0.15)',
     borderRadius: '50%',
     display: 'flex',
@@ -56,26 +56,37 @@ export default function Landing() {
   };
 
   const titleStyle = {
-    fontSize: '2.2rem',
     fontWeight: 'bold',
     color: '#FFD700',
     textAlign: 'center',
     marginBottom: '8px',
     textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
-    letterSpacing: '1px'
+    letterSpacing: '1px',
+    lineHeight: '1.2',
+    fontSize: 'clamp(1.5rem, 6vw, 2.5rem)'
+  };
+
+  const titleLineStyle = {
+    display: 'block'
+  };
+
+  const titleNoBreakStyle = {
+    display: 'block',
+    whiteSpace: 'nowrap'
   };
 
   const subtitleStyle = {
-    fontSize: '1rem',
+    fontSize: 'clamp(0.8rem, 3vw, 1rem)',
     color: '#e0e0e0',
     textAlign: 'center',
-    marginBottom: '40px',
-    opacity: 0.9
+    marginBottom: '35px',
+    opacity: 0.9,
+    maxWidth: '320px'
   };
 
   const buttonStyle = {
-    padding: '16px 48px',
-    fontSize: '1.2rem',
+    padding: '14px 44px',
+    fontSize: 'clamp(1rem, 4vw, 1.2rem)',
     fontWeight: 'bold',
     color: '#003366',
     background: 'linear-gradient(135deg, #FFD700, #FFC000)',
@@ -85,25 +96,28 @@ export default function Landing() {
     textDecoration: 'none',
     boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
     transition: 'all 0.3s ease',
-    letterSpacing: '0.5px'
+    letterSpacing: '0.5px',
+    whiteSpace: 'nowrap'
   };
 
   const footerStyle = {
     position: 'absolute',
-    bottom: '20px',
+    bottom: '15px',
     color: 'rgba(255,255,255,0.5)',
-    fontSize: '0.8rem'
+    fontSize: 'clamp(0.65rem, 2vw, 0.8rem)',
+    textAlign: 'center',
+    padding: '0 20px'
   };
 
   const menuDropdownStyle = {
     position: 'absolute',
-    top: '80px',
-    left: '20px',
+    top: '70px',
+    left: '15px',
     background: 'white',
     borderRadius: '12px',
     boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
     zIndex: 30,
-    minWidth: '220px',
+    minWidth: '200px',
     overflow: 'hidden'
   };
 
@@ -111,10 +125,10 @@ export default function Landing() {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    padding: '14px 20px',
+    padding: '12px 18px',
     color: '#333',
     textDecoration: 'none',
-    fontSize: '15px',
+    fontSize: '14px',
     fontWeight: '500',
     borderBottom: '1px solid #f0f0f0',
     cursor: 'pointer',
@@ -164,7 +178,11 @@ export default function Landing() {
         onError={(e) => { e.target.style.display = 'none'; }}
       />
 
-      <h1 style={titleStyle}>NAMATL STUDENT E-VOTING</h1>
+      <h1 style={titleStyle}>
+        <span style={titleLineStyle}>NAMTLS STUDENT</span>
+        <span style={titleNoBreakStyle}>E-VOTING</span>
+      </h1>
+
       <p style={subtitleStyle}>
         National Association of Maritime Transport and Logistics Students
       </p>
