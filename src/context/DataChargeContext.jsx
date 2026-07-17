@@ -165,10 +165,8 @@ export function DataChargeProvider({ children }) {
     }
   };
 
-  // ─── UPDATED: checkActivationCost ─────────────────────────────────────
-  // No longer checks withdrawal balance — payment is via Flutterwave modal
+  // UPDATED: checkActivationCost - No balance check, always allows activation
   const checkActivationCost = async (academicYear) => {
-    // 2026/2027 is FREE
     if (academicYear === '2026/2027') {
       return { 
         free: true, cost: 0, 
@@ -176,26 +174,20 @@ export function DataChargeProvider({ children }) {
         canActivate: true 
       };
     }
-    
-    // 2027/2028+ — Pay via Flutterwave (no balance check needed)
     return { 
       free: false, 
       cost: 25000, 
-      message: `Activation for ${academicYear} costs ₦25,000. You will pay via Flutterwave card/USSD/transfer and the money will be added to your withdrawal balance.`, 
+      message: `Activation for ${academicYear} costs ₦25,000. Pay via Flutterwave.`, 
       canActivate: true 
     };
   };
 
-  // ─── UPDATED: processActivationPayment ─────────────────────────────────
-  // OLD: Deducted ₦25,000 from withdrawalBalance
-  // NEW: Opens Flutterwave payment modal. On success, ADDS ₦25,000 to withdrawalBalance
+  // UPDATED: processActivationPayment - Flutterwave modal, adds ₦25k to balance on success
   const processActivationPayment = async (academicYear) => {
-    // ─── 2026/2027 is FREE ───────────────────────────────────────────────
     if (academicYear === '2026/2027') {
       return { success: true, message: 'Election activated FREE!' };
     }
 
-    // ─── 2027/2028+ — Open Flutterwave payment modal ─────────────────────
     try {
       const txRef = `ACT-${academicYear.replace('/', '-')}-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
@@ -214,7 +206,7 @@ export function DataChargeProvider({ children }) {
           },
           customizations: {
             title: 'NAMTLS Activation Payment',
-            description: `Activation fee for ${academicYear} academic year`,
+            description: `Activation fee for ${academicYear}`,
             logo: 'https://namtls-election.vercel.app/logo.png'
           },
           callback: async (response) => {
@@ -233,7 +225,6 @@ export function DataChargeProvider({ children }) {
                 const verifyData = await verifyRes.json();
 
                 if (verifyData.success) {
-                  // ✅ Payment verified — ADD ₦25,000 to withdrawalBalance
                   await setDoc(doc(db, 'finances', 'withdrawalBalance'), {
                     balance: increment(25000),
                     lastActivationDeposit: 25000,
@@ -247,32 +238,26 @@ export function DataChargeProvider({ children }) {
 
                   resolve({
                     success: true,
-                    message: `✅ Payment successful! ₦25,000 added to your withdrawal balance for ${academicYear}.`
+                    message: `✅ ₦25,000 added to withdrawal balance for ${academicYear}.`
                   });
                 } else {
                   resolve({
                     success: false,
-                    message: `⚠️ Payment received but verification failed: ${verifyData.message || 'Unknown error'}. Contact support with ref: ${txRef}`
+                    message: `Verification failed: ${verifyData.message}. Ref: ${txRef}`
                   });
                 }
               } catch (verifyErr) {
                 resolve({
                   success: false,
-                  message: `⚠️ Payment received but server error: ${verifyErr.message}. Ref: ${txRef}`
+                  message: `Server error: ${verifyErr.message}. Ref: ${txRef}`
                 });
               }
             } else {
-              resolve({
-                success: false,
-                message: '❌ Payment was not completed. Please try again.'
-              });
+              resolve({ success: false, message: 'Payment not completed.' });
             }
           },
           onClose: () => {
-            resolve({
-              success: false,
-              message: '❌ Payment cancelled. You can activate later.'
-            });
+            resolve({ success: false, message: 'Payment cancelled.' });
           }
         };
 
@@ -281,15 +266,11 @@ export function DataChargeProvider({ children }) {
       });
 
     } catch (e) {
-      if (e.message && e.message.includes('Cannot find module')) {
-        return {
-          success: false,
-          message: '❌ flutterwave-react-v3 is not installed. Add it to package.json and redeploy.'
-        };
-      }
       return {
         success: false,
-        message: '❌ Activation payment failed: ' + e.message
+        message: e.message.includes('Cannot find module') 
+          ? 'Install flutterwave-react-v3 in package.json' 
+          : 'Error: ' + e.message
       };
     }
   };
