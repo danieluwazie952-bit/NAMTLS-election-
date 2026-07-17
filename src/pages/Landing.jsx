@@ -1,4 +1,4 @@
-// NAMTLS Landing v2.0.2 - FORCE UPDATE 2026-07-17
+// NAMTLS Landing v2.0.1 - FORCE UPDATE 2026-07-17
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -81,7 +81,8 @@ export default function Landing() {
     textAlign: 'center',
     marginBottom: '35px',
     opacity: 0.9,
-    maxWidth: '320px'
+    maxWidth: '320px',
+    padding: '0 10px'
   };
 
   const buttonStyle = {
@@ -111,7 +112,7 @@ export default function Landing() {
 
   const menuDropdownStyle = {
     position: 'absolute',
-    top: '70px',
+    top: '65px',
     left: '15px',
     background: 'white',
     borderRadius: '12px',
