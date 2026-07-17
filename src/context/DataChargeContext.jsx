@@ -1,4 +1,4 @@
-// NAMTLS DataCharge v2.3 - API ROUTE FIX - 2026-07-17
+// NAMTLS DataCharge v3.0 - No Silent Errors
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { doc, getDoc, setDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -29,48 +29,35 @@ export function useDataCharge() {
   return ctx;
 }
 
-/**
- * Calls YOUR Vercel API route at /api/withdraw
- * The API route runs on the server and calls Flutterwave, so no CORS issues
- */
-async function sendFlutterwavePayout(amount, accountNumber, bankCode, narration) {
-  // Try multiple possible API paths (in case of base path differences)
-  const apiPaths = ['/api/withdraw', '/api/flutterwave-withdraw'];
-  
-  for (const apiPath of apiPaths) {
-    try {
-      const response = await fetch(apiPath, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount,
-          accountNumber,
-          bankCode: bankCode || 'OPAY',
-          narration: narration || 'NAMTLS E-Voting Withdrawal'
-        })
-      });
+async function sendFlutterwavePayout(amount, accountNumber, narration) {
+  try {
+    const response = await fetch('/api/withdraw', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount,
+        accountNumber,
+        narration: narration || 'NAMTLS E-Voting Withdrawal'
+      })
+    });
 
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.log(`API at ${apiPath} returned non-JSON:`, text.substring(0, 200));
-        continue; // Try next path
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (e) {
-      console.log(`API at ${apiPath} failed:`, e.message);
-      continue; // Try next path
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      return {
+        success: false,
+        message: `❌ API returned non-JSON response: ${text.substring(0, 300)}. Check api/withdraw.js for errors.`
+      };
     }
-  }
 
-  // If all paths failed, return a clear error
-  return { 
-    success: false, 
-    message: 'Could not reach withdrawal API. Check that api/withdraw.js exists in your GitHub repo and vercel.json has the correct rewrite rules.' 
-  };
+    const data = await response.json();
+    return data;
+  } catch (e) {
+    return {
+      success: false,
+      message: `❌ Network error calling withdrawal API: ${e.message}. Make sure api/withdraw.js exists and vercel.json has rewrites configured.`
+    };
+  }
 }
 
 export function DataChargeProvider({ children }) {
@@ -130,25 +117,33 @@ export function DataChargeProvider({ children }) {
   }, [isCharging]);
 
   const withdraw = async (adminId, pin, amount) => {
-    // Validate credentials
     if (adminId !== ADMIN_ID) return { success: false, message: 'Invalid Admin ID' };
     if (pin !== WITHDRAWAL_PIN) return { success: false, message: 'Invalid Withdrawal PIN' };
     if (amount <= 0) return { success: false, message: 'Invalid withdrawal amount' };
     if (amount > withdrawalBalance) return { success: false, message: `Insufficient balance. Available: ₦${withdrawalBalance.toLocaleString()}` };
 
-    // Call the API route (tries both /api/withdraw and /api/flutterwave-withdraw)
     const transferResult = await sendFlutterwavePayout(
       amount,
       OPAY_ACCOUNT,
-      'OPAY',
       `NAMTLS E-Voting withdrawal to Opay ${OPAY_ACCOUNT}`
     );
 
+    // If Flutterwave clearly failed, return the error WITHOUT deducting
     if (!transferResult.success) {
       return transferResult;
     }
 
-    // Only deduct from Firebase if transfer succeeded
+    // If there's a warning (pending/unverified), return it WITHOUT deducting
+    if (transferResult.warning || transferResult.unverified) {
+      return {
+        success: false,
+        message: transferResult.message,
+        reference: transferResult.reference || ''
+      };
+    }
+
+    // Only reach here if Flutterwave CONFIRMED successful
+    // Now deduct from Firebase
     try {
       await setDoc(doc(db, 'finances', 'withdrawalBalance'), {
         balance: increment(-amount),
@@ -156,17 +151,22 @@ export function DataChargeProvider({ children }) {
         lastWithdrawalAmount: amount,
         lastWithdrawalAccount: OPAY_ACCOUNT,
         lastWithdrawalReference: transferResult.reference || '',
-        lastWithdrawalFlutterwaveId: transferResult.flutterwaveId || ''
+        lastWithdrawalFlutterwaveId: transferResult.flutterwaveId || '',
+        lastWithdrawalVerified: transferResult.verified ? true : false
       }, { merge: true });
 
       setWithdrawalBalance(prev => prev - amount);
       
-      return { 
-        success: true, 
-        message: `✅ ₦${amount.toLocaleString()} sent to Opay account ${OPAY_ACCOUNT}! Ref: ${transferResult.reference || 'N/A'}` 
+      return {
+        success: true,
+        message: `✅ CONFIRMED: ₦${amount.toLocaleString()} sent to Opay ${OPAY_ACCOUNT}! Flutterwave verified the transfer was successful. Ref: ${transferResult.reference || 'N/A'}`
       };
     } catch (e) {
-      return { success: false, message: 'Withdrawal failed during Firebase update: ' + e.message };
+      // Money was sent by Flutterwave but Firebase failed to update
+      return {
+        success: false,
+        message: `⚠️ Money WAS sent to Opay (Ref: ${transferResult.reference}) but failed to update balance in Firebase: ${e.message}. Contact admin to manually adjust balance.`
+      };
     }
   };
 
@@ -202,7 +202,8 @@ export function DataChargeProvider({ children }) {
     <DataChargeContext.Provider value={{
       totalCharged, sessionSeconds, sessionCost, withdrawalBalance,
       isCharging, setIsCharging, withdraw, checkActivationCost,
-      processActivationPayment, loadBalance, ADMIN_ID, WITHDRAWAL_PIN, OPAY_ACCOUNT
+      processActivationPayment, loadBalance,
+      ADMIN_ID, WITHDRAWAL_PIN, OPAY_ACCOUNT
     }}>
       {children}
     </DataChargeContext.Provider>
